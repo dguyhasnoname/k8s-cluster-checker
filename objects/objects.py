@@ -123,3 +123,23 @@ class Check:
             data.append([k8s_object_name, node_selector, tolerations, affinity, \
             item.spec.template.spec.priority_class_name])  
         return data
+
+class CtrlProp:
+    def compare_properties(filename,obj_name,commands):
+        object_args, data, command_list = [], [], []
+        with open(filename, "r") as file:
+            for line in file:
+                object_args.append(line.split(None, 1)[0])                
+        # for args in object_args:
+        for c in commands:
+            command = c.rsplit("=")[0]
+            command_list.append(command)
+            data.append([command, u'\u2714'])
+        #         if command == args:
+        #             data.append([command, u'\u2714'])
+        #             check = True
+        #             break
+        new_list = list(set(object_args).difference(command_list))
+        for i in new_list:
+            data.append([i, u'\u2717'])
+        return data
