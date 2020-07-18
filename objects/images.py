@@ -9,7 +9,7 @@ import deployments as deployments
 start_time = time.time()
 
 class Images:
-    global k8s_object, k8s_object_list, namespace
+    global k8s_object, k8s_object_list
     k8s_object_list = deployments.Deployment.get_deployments()
 
     def get_images():
@@ -25,6 +25,7 @@ class Images:
         k8s.Output.print_table(data,headers)
 
     def get_last_updated_tag():
+        repo = []
         data = Images.get_images()
         headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', 'IMAGE', 'LATEST_TAG_AVAILABLE'] 
         result = []
@@ -46,16 +47,28 @@ class Images:
             else:
                 repo['name'] = u'\u2717'
             result.append([image[0], image[1], image[3], image[2], repo['name']])
-        k8s.Output.print_table(result,headers)
-        
-                        
-        
-                    
+        k8s.Output.print_table(result,headers,True)
+
+    def image_recommendation():
+        config_not_defined, if_not_present, always = [], [], []
+        data = Images.get_images()
+        for image in data:
+            if not 'Always' in image[-1]:
+                config_not_defined.append(image[3])
+            if 'IfNotPresent' in image[-1]:
+                if_not_present.append(True)
+            if 'Always' in image[-1]:
+                always.append(True)
+        k8s.Output.bar(if_not_present, data,'with image pull-policy','deployments','"IfNotPresent"')
+        k8s.Output.bar(always, data,'with image pull-policy','deployments','"Always"')                
+        k8s.Output.bar(config_not_defined, data,'has not defined recommended image pull-policy','deployments','"Always"')
 
 def main():
-    #Images.list_images()
+    # Images.list_images()
+    Images.image_recommendation()
     Images.get_last_updated_tag()
-    print(k8s.Output.GREEN + "Total time taken: " + k8s.Output.RESET + "{}s".format(round((time.time() - start_time), 2)))
+    print(k8s.Output.GREEN + "Total time taken: " + k8s.Output.RESET + \
+    "{}s".format(round((time.time() - start_time), 2)))
 
 if __name__ == "__main__":
     main()

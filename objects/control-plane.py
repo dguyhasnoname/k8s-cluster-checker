@@ -23,13 +23,18 @@ class CtrlPlane:
     k8s_object = 'pod'
 
     def check_ctrl_plane_pods_health_probes():
-        headers = ['PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
         data = k8s.Check.health_probes(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers)   
 
     def check_ctrl_plane_pods_resources():
-        headers = ['PODS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
+        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
         data = k8s.Check.resources(k8s_object,k8s_object_list)
+        k8s.Output.print_table(data,headers)
+
+    def check_ctrl_plane_pods_properties_operation(item,filename,headers):
+        commands = item.spec.containers[0].command
+        data = k8s.CtrlProp.compare_properties(filename, commands)
         k8s.Output.print_table(data,headers)
 
     def check_ctrl_plane_pods_properties():
@@ -38,29 +43,28 @@ class CtrlPlane:
         for item in k8s_object_list.items:
             if item.spec.containers[0].name in "kube-controller-manager" \
             and item.spec.containers[0].name not in container_name_check:
-                commands = item.spec.containers[0].command
-                data = k8s.CtrlProp.compare_properties('./conf/kube-controller-manager'\
-                ,'kube-controller-manager', commands)
-                k8s.Output.print_table(data,headers)
+                CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
+                './conf/kube-controller-manager',headers)
+
             elif item.spec.containers[0].name in "kube-apiserver" \
             and item.spec.containers[0].name not in container_name_check:
-                commands = item.spec.containers[0].command
-                data = k8s.CtrlProp.compare_properties('./conf/kube-apiserver',\
-                'kube-apiserver', commands)
-                k8s.Output.print_table(data,headers)
+                CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
+                './conf/kube-apiserver',headers)                
+                k8s.CtrlProp.check_admission_controllers(item.spec.containers[0].command)
+
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:
-                commands = item.spec.containers[0].command
-                data = k8s.CtrlProp.compare_properties('./conf/kube-scheduler',\
-                'kube-scheduler', commands)
-                k8s.Output.print_table(data,headers)
+                CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
+                './conf/kube-scheduler',headers)  
+                k8s.CtrlProp.secure_scheduler_check(item.spec.containers[0].command)
             container_name_check = item.spec.containers[0].name
 
 def main():
     CtrlPlane.check_ctrl_plane_pods_health_probes()
     CtrlPlane.check_ctrl_plane_pods_resources()
     CtrlPlane.check_ctrl_plane_pods_properties()
-    print(k8s.Output.GREEN + "Total time taken: " + k8s.Output.RESET + "{}s".format(round((time.time() - start_time), 2)))
+    print(k8s.Output.GREEN + "Total time taken: " + k8s.Output.RESET + \
+    "{}s".format(round((time.time() - start_time), 2)))
 
 if __name__ == "__main__":
     main()    
