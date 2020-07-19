@@ -21,18 +21,21 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
     args=parser.parse_args()
 
-
-class Daemonset:
-    global k8s_object, k8s_object_list, namespace
-    def get_damemonsets():
-        namespace = 'kube-system'
+class K8s:
+    def get_damemonsets(ns):           
         try:
-            damemonsets = apps.list_namespaced_daemon_set(namespace, timeout_seconds=10)
+            if ns != 'all': 
+                namespace = ns
+                damemonsets = apps.list_namespaced_daemon_set(namespace, timeout_seconds=10)
+            else:             
+                damemonsets = apps.list_daemon_set_for_all_namespaces(timeout_seconds=10)
             return damemonsets
         except ApiException as e:
             print("Exception when calling AppsV1Api->list_namespaced_daemon_set: %s\n" % e)
 
-    k8s_object_list = get_damemonsets()
+class Daemonset:
+    global k8s_object, k8s_object_list, namespace
+    k8s_object_list = K8s.get_damemonsets('kube-system')
     k8s_object = 'daemonset'
 
     def check_damemonset_security(v):
@@ -77,7 +80,7 @@ def main():
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
-            verbose= True
+            verbose = True
             call_all(verbose)
         else:
             assert False, "unhandled option"

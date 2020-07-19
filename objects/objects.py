@@ -7,6 +7,7 @@ class Output:
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     RESET = '\033[0m'  
+    BOLD = '\033[1;30m'
     # u'\u2717' means values is None or not defined
     # u'\u2714' means value is defined
     global patterns
@@ -15,17 +16,20 @@ class Output:
                 ('False', lambda text: style(text, fg='yellow'))]
 
     def print_table(data,headers,verbose):
-        if not verbose: return
-        table = columnar(data, headers, no_borders=True, patterns=patterns, row_sep='-')
-        print (table)
+        if verbose and len(data) != 0:
+            table = columnar(data, headers, no_borders=True, patterns=patterns, row_sep='-')
+            print (table)
+        else:
+            return
 
     def bar(not_defined,data,message,k8s_object,config):
         show_bar = []
-        percentage = round(((100.0 * len(not_defined) / len(data))), 2)
         if len(not_defined) == 0:
             return
-        for i in range(50):
-            if int(i) < percentage / 2: 
+        percentage = round(((100.0 * len(not_defined) / len(data))), 2)
+
+        for i in range(25):
+            if int(i) < percentage / 4: 
                 show_bar.append(u'\u2588')
             else:
                 show_bar.append(u'\u2591')
@@ -67,7 +71,7 @@ class Check:
                     config_not_defined.append(True)
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined, data,'with no',k8s_object,config)
+        Output.bar(config_not_defined, data,'container with no',k8s_object,config)
         Output.bar(privileged_containers, data,'running have', k8s_object, \
         'privileged containers')
         Output.bar(allow_privilege_escalation, data,'have containers running in', \
@@ -155,9 +159,10 @@ class Check:
                 if item.spec.replicas == 1:
                     single_replica_count.append(True)
 
-        print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(single_replica_count, data, 'are running with 1', k8s_object, config)              
-        return data
+        if len(single_replica_count) > 0:
+            print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
+            Output.bar(single_replica_count, data, 'are running with 1', k8s_object, config)              
+            return data
 
 #check for kube2iam
     def tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list):
@@ -235,9 +240,9 @@ class Check:
                 never.append(True)  
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))            
-        Output.bar(if_not_present, data, 'with image pull-policy', k8s_object, '"IfNotPresent"')
-        Output.bar(always, data, 'with image pull-policy', k8s_object, '"Always"')
-        Output.bar(never, data, 'with image pull-policy', k8s_object, '"Always"')
+        Output.bar(if_not_present, data, 'container with image pull-policy', k8s_object, '"IfNotPresent"')
+        Output.bar(always, data, 'container with image pull-policy', k8s_object, '"Always"')
+        Output.bar(never, data, 'container with image pull-policy', k8s_object, '"Never"')
         return data 
 
 class CtrlProp:

@@ -10,7 +10,7 @@ start_time = time.time()
 
 class Images:
     global k8s_object, k8s_object_list
-    k8s_object_list = deployments.Deployment.get_deployments()
+    k8s_object_list = deployments.Deployment.get_deployments("")
 
     def get_images():
         data = []

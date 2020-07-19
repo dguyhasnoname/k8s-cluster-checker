@@ -22,23 +22,37 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace deployment details.")
     args=parser.parse_args()
 
-class Deployment:
-    global k8s_object, k8s_object_list, namespace
-    def get_deployments():
+class K8s:
+    def get_deployments(ns):
         try:
-            namespace = 'kube-system'
-            deployments = apps.list_namespaced_deployment(namespace, timeout_seconds=10)
+            if ns != 'all': 
+                namespace = ns
+                deployments = apps.list_namespaced_deployment(namespace, timeout_seconds=10)
+            else:
+                deployments = apps.list_deployment_for_all_namespaces(timeout_seconds=10)
             return deployments
         except ApiException as e:
             print("Exception when calling AppsV1Api->read_namespaced_deployment: %s\n" % e)
 
+class Deployment:
+    global k8s_object, k8s_object_list, namespace
     # print ("Fetching deployment data...")
     # with alive_bar(1, bar = 'bubbles') as bar:
     #     for i in range(1):
     #         k8s_object_list = get_deployments()
     #         bar()
-    k8s_object_list = get_deployments()
+    k8s_object_list = K8s.get_deployments("kube-system")
     k8s_object = 'deployment'
+
+    def get_namespaced_deployment_list(v):
+        data = []
+        all_deployments = Deployment.get_deployments('all')
+        headers = ['NAMESPACE', 'DEPLOYMENTS']
+        for item in all_deployments.items:
+            data.append([item.metadata.namespace, item.metadata.name])
+        if v: print ("Total deployments: {}".format(len(data)))
+        k8s.Output.print_table(data,headers,v)
+        return data    
 
     def check_deployment_security(v):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
@@ -94,7 +108,7 @@ def main():
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
-            verbose= True
+            verbose = True
             call_all(verbose)
         else:
             assert False, "unhandled option"

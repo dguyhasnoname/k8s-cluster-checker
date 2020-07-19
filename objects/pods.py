@@ -3,7 +3,6 @@ from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
 import datetime
 import objects as k8s
-import images as images
 
 start_time = time.time()
 config.load_kube_config()
@@ -23,27 +22,33 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     args=parser.parse_args()
 
-class Pods:
-    global k8s_object, k8s_object_list, verbose
-    def get_pods():
+class K8s:
+    def get_pods(ns):
         try:
-            pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
+            if ns == 'all':          
+                pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
+            else:
+                namespace = ns
+                pods = core.list_namespaced_pod(namespace, timeout_seconds=10)
             return pods
         except ApiException as e:
             print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)
 
+class _Pods:
+    global k8s_object, k8s_object_list, verbose
     # with alive_bar(100, bar = 'bubbles') as bar:
     #     for i in range(100):
     #         k8s_object_list = get_pods()
     #         bar()
-    k8s_object_list = get_pods()
+    k8s_object_list = K8s.get_pods('all')
     k8s_object = 'pods'
 
     def get_namespaced_pod_list(v):
         data = []
-        headers = ['POD', 'NAMESPACE']
+        headers = ['NAMESPACE', 'POD']
         for item in k8s_object_list.items:
-            data.append([item.metadata.name, item.metadata.namespace])
+            data.append([item.metadata.namespace, item.metadata.name])
+        if v: print ("Total pods: {}".format(len(data)))            
         k8s.Output.print_table(data,headers,v)
         return data
     
@@ -79,13 +84,13 @@ class Pods:
         k8s.Output.print_table(data,headers,v)
 
 def call_all(v):
-    Pods.get_namespaced_pod_list(v)
-    Pods.check_pod_security(v)
-    Pods.check_pod_health_probes(v)
-    Pods.check_pod_resources(v)
-    Pods.check_pod_qos(v)
-    Pods.check_image_pullpolicy(v)
-    Pods.check_pod_tolerations_affinity_node_selector_priority(v)
+    #_Pods.get_namespaced_pod_list(v)
+    _Pods.check_pod_security(v)
+    _Pods.check_pod_health_probes(v)
+    _Pods.check_pod_resources(v)
+    _Pods.check_pod_qos(v)
+    _Pods.check_image_pullpolicy(v)
+    _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:
@@ -102,7 +107,7 @@ def main():
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
-            verbose= True
+            verbose = True
             call_all(verbose)
         else:
             assert False, "unhandled option"
