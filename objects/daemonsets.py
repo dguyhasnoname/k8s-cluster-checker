@@ -21,7 +21,7 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
     args=parser.parse_args()
 
-class K8s:
+class K8sDaemonSet:
     def get_damemonsets(ns):           
         try:
             if ns != 'all': 
@@ -33,9 +33,9 @@ class K8s:
         except ApiException as e:
             print("Exception when calling AppsV1Api->list_namespaced_daemon_set: %s\n" % e)
 
-class Daemonset:
+class _Daemonset:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8s.get_damemonsets('kube-system')
+    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system')
     k8s_object = 'daemonset'
 
     def check_damemonset_security(v):
@@ -60,10 +60,10 @@ class Daemonset:
         k8s.Output.print_table(data,headers,v)
 
 def call_all(v):
-    Daemonset.check_damemonset_security(v)
-    Daemonset.check_damemonset_health_probes(v)
-    Daemonset.check_damemonset_resources(v)
-    Daemonset.check_damemonset_tolerations_affinity_node_selector_priority(v)
+    _Daemonset.check_damemonset_security(v)
+    _Daemonset.check_damemonset_health_probes(v)
+    _Daemonset.check_damemonset_resources(v)
+    _Daemonset.check_damemonset_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:

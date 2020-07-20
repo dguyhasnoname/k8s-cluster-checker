@@ -12,7 +12,7 @@ start_time = time.time()
 config.load_kube_config()
 core = client.CoreV1Api()
 
-class K8s:
+class K8sNameSpace:
     def get_ns():
         try:
             ns_list = core.list_namespace(timeout_seconds=10)
@@ -22,17 +22,7 @@ class K8s:
 
 class Namespace:
     global all_ns_list
-    all_ns_list = K8s.get_ns()
-
-    def get_ns_list():
-        data = []
-        for item in all_ns_list.items:
-            data.append(item.metadata.name)
-        return data
-
-    def get_ns_count(v):
-        print ("Total Namespaces: {}".format(len(all_ns_list.items)))
-        return len(all_ns_list.items)
+    all_ns_list = K8sNameSpace.get_ns()
 
     # def workload_sharing_data(data):
     #     data = sorted(data, key=lambda x: x[4])[::-1]
@@ -59,22 +49,21 @@ class Namespace:
                        
             if v:
                 print (k8s.Output.BOLD + "\n\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
-                Namespace.get_object_data(deploy.K8s.get_deployments(ns),'deployments')
-                Namespace.get_object_data(ds.K8s.get_damemonsets(ns),'damemonsets')
-                Namespace.get_object_data(sts.K8s.get_sts(ns),'statefulsets')
+                Namespace.get_object_data(deploy.K8sDeploy.get_deployments(ns),'deployments')
+                Namespace.get_object_data(ds.K8sDaemonSet.get_damemonsets(ns),'damemonsets')
+                Namespace.get_object_data(sts.K8sStatefulSet.get_sts(ns),'statefulsets')
                 for i in range(120):
                     print (k8s.Output.GREEN + u'\u2581', end="" + k8s.Output.RESET )
 
-            deployment_count = len(deploy.K8s.get_deployments(ns).items)
-            ds_count = len(ds.K8s.get_damemonsets(ns).items)
-            sts_count = len(sts.K8s.get_sts(ns).items)
-            pod_count = len(pods.K8s.get_pods(ns).items)
+            deployment_count = len(deploy.K8sDeploy.get_deployments(ns).items)
+            ds_count = len(ds.K8sDaemonSet.get_damemonsets(ns).items)
+            sts_count = len(sts.K8sStatefulSet.get_sts(ns).items)
+            pod_count = len(pods.K8sPods.get_pods(ns).items)
             data.append([ns, deployment_count, ds_count, sts_count, pod_count])
         headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS']                 
-        k8s.Output.print_table(data,headers,True)
+        if not v: k8s.Output.print_table(data,headers,True)
 
 def call_all(v):
-    #Namespace.get_ns_count(v)
     Namespace.get_ns_data(v)
 
 def main():

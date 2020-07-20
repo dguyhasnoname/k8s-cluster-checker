@@ -22,7 +22,7 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     args=parser.parse_args()
 
-class K8s:
+class K8sPods:
     def get_pods(ns):
         try:
             if ns == 'all':          
@@ -40,7 +40,7 @@ class _Pods:
     #     for i in range(100):
     #         k8s_object_list = get_pods()
     #         bar()
-    k8s_object_list = K8s.get_pods('all')
+    k8s_object_list = K8sPods.get_pods('all')
     k8s_object = 'pods'
 
     def get_namespaced_pod_list(v):

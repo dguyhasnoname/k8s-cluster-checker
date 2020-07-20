@@ -2,6 +2,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
 import datetime
+start_time = time.time()
 import objects as k8s
 import deployments as deploy
 import daemonsets as ds
@@ -9,7 +10,6 @@ import statefulsets as sts
 import pods as pods
 import namespace as ns
 
-start_time = time.time()
 config.load_kube_config()
 core = client.CoreV1Api()
 

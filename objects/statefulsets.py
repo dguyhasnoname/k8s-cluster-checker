@@ -8,7 +8,7 @@ start_time = time.time()
 config.load_kube_config()
 apps = client.AppsV1Api()
 
-class K8s:
+class K8sStatefulSet:
     def get_sts(ns):
         namespace = 'kube-system'
         try:
@@ -21,9 +21,9 @@ class K8s:
         except ApiException as e:
             print("Exception when calling AppsV1Api->list_namespaced_stateful_set: %s\n" % e)
 
-class Sts:
+class _Sts:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8s.get_sts('kube-system')
+    k8s_object_list = K8sStatefulSet.get_sts('kube-system')
     k8s_object = 'statefulsets'
 
     def check_sts_security(v):
@@ -48,10 +48,10 @@ class Sts:
         k8s.Output.print_table(data,headers,v)
 
 def call_all(v):
-    Sts.check_sts_security(v)
-    Sts.check_sts_health_probes(v)
-    Sts.check_sts_resources(v)
-    Sts.check_sts_tolerations_affinity_node_selector_priority(v)
+    _Sts.check_sts_security(v)
+    _Sts.check_sts_health_probes(v)
+    _Sts.check_sts_resources(v)
+    _Sts.check_sts_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:
