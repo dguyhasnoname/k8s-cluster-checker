@@ -1,7 +1,6 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, os, getopt, time
-from alive_progress import alive_bar
 from time import sleep
 import objects as k8s
 
@@ -22,7 +21,7 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace deployment details.")
     args=parser.parse_args()
 
-class K8s:
+class K8sDeploy:
     def get_deployments(ns):
         try:
             if ns != 'all': 
@@ -34,19 +33,19 @@ class K8s:
         except ApiException as e:
             print("Exception when calling AppsV1Api->read_namespaced_deployment: %s\n" % e)
 
-class Deployment:
+class _Deployment:
     global k8s_object, k8s_object_list, namespace
     # print ("Fetching deployment data...")
     # with alive_bar(1, bar = 'bubbles') as bar:
     #     for i in range(1):
     #         k8s_object_list = get_deployments()
     #         bar()
-    k8s_object_list = K8s.get_deployments("kube-system")
+    k8s_object_list = K8sDeploy.get_deployments("kube-system")
     k8s_object = 'deployment'
 
     def get_namespaced_deployment_list(v):
         data = []
-        all_deployments = Deployment.get_deployments('all')
+        all_deployments = _Deployment.get_deployments('all')
         headers = ['NAMESPACE', 'DEPLOYMENTS']
         for item in all_deployments.items:
             data.append([item.metadata.namespace, item.metadata.name])
@@ -86,12 +85,12 @@ class Deployment:
         k8s.Output.print_table(data,headers,v)       
 
 def call_all(v):
-    Deployment.check_deployment_security(v)
-    Deployment.check_deployment_health_probes(v)
-    Deployment.check_deployment_resources(v)
-    Deployment.check_deployment_strategy(v)
-    Deployment.check_replica(v)
-    Deployment.check_deployment_tolerations_affinity_node_selector_priority(v)
+    _Deployment.check_deployment_security(v)
+    _Deployment.check_deployment_health_probes(v)
+    _Deployment.check_deployment_resources(v)
+    _Deployment.check_deployment_strategy(v)
+    _Deployment.check_replica(v)
+    _Deployment.check_deployment_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:
