@@ -1,6 +1,5 @@
 from columnar import columnar
 from click import style
-import itertools
 
 class Output:
     RED = '\033[31m'
@@ -15,6 +14,10 @@ class Output:
                 ('True', lambda text: style(text, fg='green')), \
                 ('False', lambda text: style(text, fg='yellow'))]
 
+    def separator(num,color,char):
+        for i in range(num):
+            print (color + char, end="" + Output.RESET )
+   
     def print_table(data,headers,verbose):
         if verbose and len(data) != 0:
             table = columnar(data, headers, no_borders=True, patterns=patterns, row_sep='-')
@@ -272,7 +275,7 @@ class CtrlProp:
             data.append([i, u'\u2717'])
         return data
 
-    def check_admission_controllers(commands):
+    def check_admission_controllers(commands,v):
         admission_plugins_enabled, admission_plugins_not_enabled = [], []
         important_admission_plugins = ['AlwaysPullImages', 'DenyEscalatingExec',  \
         'LimitRange', 'NodeRestriction', 'PodSecurityPolicy', 'ResourceQuota', 'SecurityContextDeny']
@@ -280,7 +283,7 @@ class CtrlProp:
         for c in commands:
             if 'enable-admission-plugins' in c:
                 admission_plugins_enabled = (c.rsplit("=")[1]).split(",")
-                print (Output.GREEN + "Important Admission Controllers enabled: \n"+ \
+                print (Output.GREEN + "\nImportant Admission Controllers enabled: \n"+ \
                 Output.RESET + "{}\n".format(admission_plugins_enabled))
 
                 admission_plugins_list = CtrlProp.read_admission_controllers()
@@ -291,7 +294,7 @@ class CtrlProp:
                 print (Output.RED + "Important Admission Controllers not enabled: \n" + \
                 Output.RESET  + "{}\n".format(admission_plugins_not_enabled))
 
-                print (Output.YELLOW + "Admission Controllers available in k8s: \n" + \
+                if v: print (Output.YELLOW + "Admission Controllers available in k8s: \n" + \
                 Output.RESET + "[{}]\n".format(admission_plugins_list))
 
     def secure_scheduler_check(commands):

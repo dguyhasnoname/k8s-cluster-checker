@@ -3,6 +3,7 @@ from kubernetes.client.rest import ApiException
 import sys, os, getopt, time
 from time import sleep
 import objects as k8s
+from modules.get_deploy import K8sDeploy
 
 start_time = time.time()
 config.load_kube_config()
@@ -21,18 +22,6 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace deployment details.")
     args=parser.parse_args()
 
-class K8sDeploy:
-    def get_deployments(ns):
-        try:
-            if ns != 'all': 
-                namespace = ns
-                deployments = apps.list_namespaced_deployment(namespace, timeout_seconds=10)
-            else:
-                deployments = apps.list_deployment_for_all_namespaces(timeout_seconds=10)
-            return deployments
-        except ApiException as e:
-            print("Exception when calling AppsV1Api->read_namespaced_deployment: %s\n" % e)
-
 class _Deployment:
     global k8s_object, k8s_object_list, namespace
     # print ("Fetching deployment data...")
@@ -40,7 +29,7 @@ class _Deployment:
     #     for i in range(1):
     #         k8s_object_list = get_deployments()
     #         bar()
-    k8s_object_list = K8sDeploy.get_deployments("kube-system")
+    k8s_object_list = K8sDeploy.get_deployments("kube-system",apps)
     k8s_object = 'deployment'
 
     def get_namespaced_deployment_list(v):

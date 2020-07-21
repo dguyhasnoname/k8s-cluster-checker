@@ -1,8 +1,8 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt
-import datetime
 import objects as k8s
+from modules.get_ds import K8sDaemonSet
 
 start_time = time.time()
 config.load_kube_config()
@@ -21,21 +21,9 @@ Before running script export KUBECONFIG file as env:
     parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
     args=parser.parse_args()
 
-class K8sDaemonSet:
-    def get_damemonsets(ns):           
-        try:
-            if ns != 'all': 
-                namespace = ns
-                damemonsets = apps.list_namespaced_daemon_set(namespace, timeout_seconds=10)
-            else:             
-                damemonsets = apps.list_daemon_set_for_all_namespaces(timeout_seconds=10)
-            return damemonsets
-        except ApiException as e:
-            print("Exception when calling AppsV1Api->list_namespaced_daemon_set: %s\n" % e)
-
 class _Daemonset:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system')
+    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system',apps)
     k8s_object = 'daemonset'
 
     def check_damemonset_security(v):

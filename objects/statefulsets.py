@@ -1,29 +1,16 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt
-import datetime
 import objects as k8s
+from modules.get_sts import K8sStatefulSet
 
 start_time = time.time()
 config.load_kube_config()
 apps = client.AppsV1Api()
 
-class K8sStatefulSet:
-    def get_sts(ns):
-        namespace = 'kube-system'
-        try:
-            if ns != 'all': 
-                namespace = ns            
-                statefulsets = apps.list_namespaced_stateful_set(namespace, timeout_seconds=10)
-            else:
-                statefulsets = apps.list_stateful_set_for_all_namespaces(timeout_seconds=10)
-            return statefulsets
-        except ApiException as e:
-            print("Exception when calling AppsV1Api->list_namespaced_stateful_set: %s\n" % e)
-
 class _Sts:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sStatefulSet.get_sts('kube-system')
+    k8s_object_list = K8sStatefulSet.get_sts('kube-system',apps)
     k8s_object = 'statefulsets'
 
     def check_sts_security(v):

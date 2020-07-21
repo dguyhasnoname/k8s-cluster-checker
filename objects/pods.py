@@ -1,8 +1,8 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
-import datetime
 import objects as k8s
+from modules.get_pods import K8sPods
 
 start_time = time.time()
 config.load_kube_config()
@@ -22,17 +22,17 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     args=parser.parse_args()
 
-class K8sPods:
-    def get_pods(ns):
-        try:
-            if ns == 'all':          
-                pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
-            else:
-                namespace = ns
-                pods = core.list_namespaced_pod(namespace, timeout_seconds=10)
-            return pods
-        except ApiException as e:
-            print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)
+# class K8sPods:
+#     def get_pods(ns):
+#         try:
+#             if ns == 'all':          
+#                 pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
+#             else:
+#                 namespace = ns
+#                 pods = core.list_namespaced_pod(namespace, timeout_seconds=10)
+#             return pods
+#         except ApiException as e:
+#             print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)
 
 class _Pods:
     global k8s_object, k8s_object_list, verbose
@@ -40,7 +40,7 @@ class _Pods:
     #     for i in range(100):
     #         k8s_object_list = get_pods()
     #         bar()
-    k8s_object_list = K8sPods.get_pods('all')
+    k8s_object_list = K8sPods.get_pods('all',core)
     k8s_object = 'pods'
 
     def get_namespaced_pod_list(v):
@@ -83,20 +83,20 @@ class _Pods:
         data = k8s.Check.image_pull_policy(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
-def call_all(v):
-    #_Pods.get_namespaced_pod_list(v)
-    _Pods.check_pod_security(v)
-    _Pods.check_pod_health_probes(v)
-    _Pods.check_pod_resources(v)
-    _Pods.check_pod_qos(v)
-    _Pods.check_image_pullpolicy(v)
-    _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
+    def call_all(v):
+        #_Pods.get_namespaced_pod_list(v)
+        _Pods.check_pod_security(v)
+        _Pods.check_pod_health_probes(v)
+        _Pods.check_pod_resources(v)
+        _Pods.check_pod_qos(v)
+        _Pods.check_image_pullpolicy(v)
+        _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
         if not opts:        
-            call_all("")
+            _Pods.call_all("")
             
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -108,7 +108,7 @@ def main():
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+            _Pods.call_all(verbose)
         else:
             assert False, "unhandled option"
 

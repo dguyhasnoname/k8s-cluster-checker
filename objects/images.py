@@ -1,16 +1,15 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, re
-import datetime
 import requests
 import objects as k8s
-import deployments as deployments
+import deployments as deploy
 
 start_time = time.time()
 
 class Images:
     global k8s_object, k8s_object_list
-    k8s_object_list = deployments.Deployment.get_deployments("")
+    k8s_object_list = deploy.K8sDeploy.get_deployments("")
 
     def get_images():
         data = []
