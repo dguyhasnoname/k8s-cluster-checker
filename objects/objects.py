@@ -1,5 +1,6 @@
 from columnar import columnar
 from click import style
+import os
 
 class Output:
     RED = '\033[31m'
@@ -14,8 +15,9 @@ class Output:
                 ('True', lambda text: style(text, fg='green')), \
                 ('False', lambda text: style(text, fg='yellow'))]
 
-    def separator(num,color,char):
-        for i in range(num):
+    def separator(color,char):
+        columns, rows = os.get_terminal_size(0)
+        for i in range(columns):
             print (color + char, end="" + Output.RESET )
    
     def print_table(data,headers,verbose):
@@ -248,6 +250,23 @@ class Check:
         Output.bar(never, data, 'container with image pull-policy', k8s_object, '"Never"')
         return data 
 
+class IngCheck:
+    def get_ing_rules(ingress_rule,v):
+        data = ""
+        for i in ingress_rule:
+            for j in i.http.paths:
+                if i.host is None:
+                    data = data + "-" + " [" + j.backend.service_name + ":" +  str(j.backend.service_port) + "]" + "\n"
+                else:
+                    data = data + i.host + " [" + j.backend.service_name + ":" +  str(j.backend.service_port) + "]" + "\n"
+        return data
+
+    def list_ingress(k8s_object_list,v):
+        data = []
+        for i in k8s_object_list.items:
+            data.append([i.metadata.namespace, i.metadata.name, len(i.spec.rules), IngCheck.get_ing_rules(i.spec.rules,v)])
+        return data      
+    
 class CtrlProp:
     def read_admission_controllers():
         admission_controllers_list = []

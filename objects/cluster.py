@@ -1,5 +1,5 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+import modules.message
+
 import sys, time, os, getopt, argparse
 start_time = time.time()
 import objects as k8s
@@ -7,26 +7,27 @@ import namespace as ns
 import nodes as node
 import control_plane as cp
 
-config.load_kube_config()
-core = client.CoreV1Api()
 
 class Cluster:
     def get_node_data(v):
-        print ("Node details:")
+        print ("\n\nNode details:")
         node._Nodes.get_nodes_details(v)
     
     def get_namespaced_data(v):
-        print ("Namespace details:")
+        print ("\n\nNamespace details:")
         ns.Namespace.get_ns_data(v)
 
     def get_ctrl_plane_data(v):
-        print ("Control plane details:")
+        print ("\n\nControl plane details:")
+        cp.CtrlPlane.get_ctrl_plane_pods()
         cp.CtrlPlane.check_ctrl_plane_pods_properties(v)
 
 def call_all(v):
     #Cluster.get_all_pods(v)
     Cluster.get_node_data(v)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_namespaced_data(v)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_ctrl_plane_data(v)
 
 def main():

@@ -21,6 +21,15 @@ class CtrlPlane:
     k8s_object_list = check_ctrl_plane_pods()
     k8s_object = 'pods'
 
+    def get_ctrl_plane_pods():
+        data = []
+        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME']
+        for item in k8s_object_list.items:
+            data.append([item.metadata.namespace, item.metadata.name])
+        data.append(['----------', '---'])
+        data.append(["Total pods: ", len(data) - 1])
+        k8s.Output.print_table(data,headers,True)
+
     def check_ctrl_plane_pods_health_probes(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
         data = k8s.Check.health_probes(k8s_object,k8s_object_list)
@@ -59,6 +68,7 @@ class CtrlPlane:
             container_name_check = item.spec.containers[0].name
 
 def call_all(v):
+    CtrlPlane.get_ctrl_plane_pods()
     CtrlPlane.check_ctrl_plane_pods_health_probes(v)
     CtrlPlane.check_ctrl_plane_pods_resources(v)
     CtrlPlane.check_ctrl_plane_pods_properties(v)
