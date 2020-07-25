@@ -3,6 +3,7 @@ from kubernetes.client.rest import ApiException
 
 class K8sNameSpace:
     def get_ns(core):
+        print ("\n[INFO] Fetching namespaces data...")
         try:
             ns_list = core.list_namespace(timeout_seconds=10)
             return ns_list

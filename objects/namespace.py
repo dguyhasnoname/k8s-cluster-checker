@@ -1,15 +1,17 @@
+from modules import message
 from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
+start_time = time.time()
 import objects as k8s
 from modules.get_pods import K8sPods
+from modules.get_svc import K8sService
 from modules.get_deploy import K8sDeploy
 from modules.get_ds import K8sDaemonSet
 from modules.get_sts import K8sStatefulSet
 from modules.get_ns import K8sNameSpace
 from modules.get_ingress import K8sIngress
 
-start_time = time.time()
+
 config.load_kube_config()
 core = client.CoreV1Api()
 apps = client.AppsV1Api()
@@ -29,7 +31,6 @@ class Namespace:
     def get_object_data(fun,k8s_object):
         k8s_object_list = fun
         if len(k8s_object_list.items):
-            print (k8s.Output.GREEN  + "\n[INFO] checking {}...".format(k8s_object) + k8s.Output.RESET)
             k8s.Check.security_context(k8s_object, k8s_object_list)
             k8s.Check.health_probes(k8s_object, k8s_object_list)
             k8s.Check.resources(k8s_object, k8s_object_list)
@@ -43,45 +44,30 @@ class Namespace:
         all_ds = K8sDaemonSet.get_damemonsets('all',apps)
         all_sts = K8sStatefulSet.get_sts('all',apps)
         all_pods = K8sPods.get_pods('all',core)
+        all_svc = K8sService.get_svc('all',core)
         all_ingress = K8sIngress.get_ingress('all',networking)
 
-        for item in all_ns_list.items:
-            ns_deployments, ns_ds, ns_sts, ns_pods, ns_ing = [], [], [], [], []
-            ns = item.metadata.name        
-            for item in all_deployments.items:
-                if item.metadata.namespace in ns:
-                    ns_deployments.append([item.metadata.namespace, item.metadata.name])
-            for item in all_ds.items:
-                if item.metadata.namespace == ns:
-                    ns_ds.append([item.metadata.namespace, item.metadata.name])
-            for item in all_sts.items:
-                if item.metadata.namespace == ns:
-                    ns_sts.append([item.metadata.namespace, item.metadata.name])
-            for item in all_pods.items:
-                if item.metadata.namespace == ns:
-                    ns_pods.append([item.metadata.namespace, item.metadata.name])
-            for item in all_ingress.items:
-                if item.metadata.namespace == ns:
-                    ns_ing.append([item.metadata.namespace, item.metadata.name])                                       
-            data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), len(ns_pods), len(ns_ing)])
+        print ("\n\nNamespace details:")
+        data = k8s.NameSpace.get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress)
 
-        total_ns, total_deploy, total_ds, total_sts, total_pods, total_ing = 0, 0, 0, 0, 0, 0
+        total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, total_ing = 0, 0, 0, 0, 0, 0, 0
         for i in data:
             total_ns += 1
-            if i[1] > 0:
-                total_deploy = total_deploy + i[1]
-                total_ds = total_ds + i[2]
-                total_sts = total_sts + i[3]
-                total_pods = total_pods + i[4]
-                total_ing = total_ing + i[5]
+            total_deploy = total_deploy + i[1]
+            total_ds = total_ds + i[2]
+            total_sts = total_sts + i[3]
+            total_pods = total_pods + i[4]
+            total_svc = total_svc + i[5]
+            total_ing = total_ing + i[6]
+
             if i[1] == 0 and i[2] == 0 and i[3] == 0 and i[4] == 0 and \
             not i[0] in ['default', 'kube-node-lease', 'kube-public', 'local']:
                 empty_ns.append([i[0]])
 
-        data.append(['----------', '---', '---', '---', '---','---'])
-        data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, total_pods, total_ing])
+        data.append(['----------', '---', '---', '---', '---','---', '---'])
+        data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, total_pods, total_svc, total_ing])
                     
-        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'INGRESS'] 
+        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS'] 
         k8s.Output.print_table(data,headers,True)
 
         if v:
@@ -91,12 +77,12 @@ class Namespace:
                 Namespace.get_object_data(K8sDeploy.get_deployments(ns,apps),'deployments')
                 Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns,apps),'damemonsets')
                 Namespace.get_object_data(K8sStatefulSet.get_sts(ns,apps),'statefulsets')
-                k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+
             if len(empty_ns) > 0:
                 print (k8s.Output.YELLOW + "\n\n[WARNING] " + k8s.Output.RESET + "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
                 k8s.Output.print_table(empty_ns,headers,True)
         return data
-
+        
 def call_all(v):
     Namespace.get_ns_data(v)
 

@@ -1,1 +1,1 @@
-print ("Fetching data..")
+print ("Fetching data " + u'\u2638' + u'\u2638' + u'\u2638')

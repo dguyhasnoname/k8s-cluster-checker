@@ -24,11 +24,6 @@ Before running script export KUBECONFIG file as env:
 
 class _Deployment:
     global k8s_object, k8s_object_list, namespace
-    # print ("Fetching deployment data...")
-    # with alive_bar(1, bar = 'bubbles') as bar:
-    #     for i in range(1):
-    #         k8s_object_list = get_deployments()
-    #         bar()
     k8s_object_list = K8sDeploy.get_deployments("kube-system",apps)
     k8s_object = 'deployment'
 
@@ -105,4 +100,11 @@ def main():
     "{}s".format(round((time.time() - start_time), 2)))
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

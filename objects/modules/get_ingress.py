@@ -1,9 +1,9 @@
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 class K8sIngress:
     def get_ingress(ns,networking):           
         try:
+            print ("\n[INFO] Fetching ingress data...")
             if ns != 'all': 
                 namespace = ns
                 ingress = networking.list_namespaced_ingress(namespace, timeout_seconds=10)

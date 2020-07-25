@@ -1,9 +1,8 @@
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 class K8sStatefulSet:
     def get_sts(ns,apps):
-        namespace = 'kube-system'
+        print ("\n[INFO] Fetching statefulSets data...")
         try:
             if ns != 'all': 
                 namespace = ns            

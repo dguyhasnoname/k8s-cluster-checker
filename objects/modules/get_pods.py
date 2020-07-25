@@ -4,6 +4,7 @@ from kubernetes.client.rest import ApiException
 class K8sPods:    
     def get_pods(ns,core):
         try:
+            print ("\n[INFO] Fetching pods data...")
             if ns == 'all':          
                 pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
             else:

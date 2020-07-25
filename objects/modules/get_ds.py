@@ -1,9 +1,9 @@
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 class K8sDaemonSet:
     def get_damemonsets(ns,apps):           
         try:
+            print ("\n[INFO] Fetching dameonsets data...")
             if ns != 'all': 
                 namespace = ns
                 damemonsets = apps.list_namespaced_daemon_set(namespace, timeout_seconds=10)

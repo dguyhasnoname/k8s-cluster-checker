@@ -1,6 +1,6 @@
 from columnar import columnar
 from click import style
-import os
+import os, re
 
 class Output:
     RED = '\033[31m'
@@ -10,10 +10,11 @@ class Output:
     BOLD = '\033[1;30m'
     # u'\u2717' means values is None or not defined
     # u'\u2714' means value is defined
+    
     global patterns
     patterns = [(u'\u2714', lambda text: style(text, fg='green')), \
                 ('True', lambda text: style(text, fg='green')), \
-                ('False', lambda text: style(text, fg='yellow'))]
+                ('False', lambda text: style(text, fg='yellow'))]  
 
     def separator(color,char):
         columns, rows = os.get_terminal_size(0)
@@ -169,7 +170,7 @@ class Check:
             Output.bar(single_replica_count, data, 'are running with 1', k8s_object, config)              
             return data
 
-#check for kube2iam
+    #check for kube2iam
     def tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list):
         data = []     
         affinity, node_selector, toleration = "", "", "" 
@@ -322,3 +323,45 @@ class CtrlProp:
                 print (Output.RED + "[ALERT] " + Output.RESET + "Scheduler is not bound to a non-loopback insecure address \n")
             if c in '--profiling':
                 print (Output.RED + "[ALERT] " + Output.RESET + "Disable profiling for reduced attack surface.\n")
+
+class Rbac:
+    def get_rules(rules):
+        data, api_groups, resources, verbs, rules_count = [], "", "", "", 0
+        for i in rules:
+            current_api_group = re.sub("[']", '', str(i.api_groups))
+            if current_api_group != "":
+                api_groups = api_groups + current_api_group + "\n"
+            else:
+                api_groups = api_groups +  "''" + "\n"
+            resources = resources + re.sub("[']", '', str(i.resources)) + "\n"
+            verbs = verbs + re.sub("[']", '', str(i.verbs)) + "\n"
+            rules_count = rules_count + len(rules)
+        data = [api_groups, resources, verbs, rules_count]
+        return data
+
+class NameSpace:
+    def get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress):
+        data = []
+        for item in all_ns_list.items:
+            ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing = [], [], [], [], [], []
+            ns = item.metadata.name        
+            for item in all_deployments.items:
+                if item.metadata.namespace in ns:
+                    ns_deployments.append([item.metadata.namespace, item.metadata.name])
+            for item in all_ds.items:
+                if item.metadata.namespace == ns:
+                    ns_ds.append([item.metadata.namespace, item.metadata.name])
+            for item in all_sts.items:
+                if item.metadata.namespace == ns:
+                    ns_sts.append([item.metadata.namespace, item.metadata.name])
+            for item in all_pods.items:
+                if item.metadata.namespace == ns:
+                    ns_pods.append([item.metadata.namespace, item.metadata.name])
+            for item in all_svc.items:
+                if item.metadata.namespace == ns:
+                    ns_svc.append([item.metadata.namespace, item.metadata.name])            
+            for item in all_ingress.items:
+                if item.metadata.namespace == ns:
+                    ns_ing.append([item.metadata.namespace, item.metadata.name])                                       
+            data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), len(ns_pods), len(ns_svc), len(ns_ing)])
+        return data

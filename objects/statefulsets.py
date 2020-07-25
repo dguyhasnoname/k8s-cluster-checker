@@ -1,5 +1,4 @@
 from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt
 import objects as k8s
 from modules.get_sts import K8sStatefulSet

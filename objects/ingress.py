@@ -1,5 +1,4 @@
 from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
 import objects as k8s
 from modules.get_ingress import K8sIngress

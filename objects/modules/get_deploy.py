@@ -1,9 +1,9 @@
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 class K8sDeploy:
     def get_deployments(ns,apps):
         try:
+            print ("\n[INFO] Fetching deployments data...")
             if ns != 'all': 
                 namespace = ns
                 deployments = apps.list_namespaced_deployment(namespace, timeout_seconds=10)

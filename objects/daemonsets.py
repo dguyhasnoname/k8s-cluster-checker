@@ -1,5 +1,4 @@
 from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt
 import objects as k8s
 from modules.get_ds import K8sDaemonSet
@@ -77,4 +76,11 @@ def main():
     "{}s".format(round((time.time() - start_time), 2)))
 
 if __name__ == "__main__":
-    main()           
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)     
