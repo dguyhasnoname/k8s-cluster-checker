@@ -66,8 +66,7 @@ def main():
     # Images.list_images()
     Images.image_recommendation()
     Images.get_last_updated_tag()
-    print(k8s.Output.GREEN + "Total time taken: " + k8s.Output.RESET + \
-    "{}s".format(round((time.time() - start_time), 2)))
+    k8s.Output.time_taken(start_time)
 
 if __name__ == "__main__":
     main()

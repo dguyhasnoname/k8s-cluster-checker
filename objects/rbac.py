@@ -14,10 +14,10 @@ rbac = client.RbacAuthorizationV1Api()
 class ClusterRole:
     global role_list
     role_list = K8sClusterRole.list_cluster_role(rbac)
-
-    def get_cluster_role():
-        data, rules_count = [], 0
-        headers = ['ROLE', 'RULES', 'API_GROUPS', 'RESOURCES', 'VERBS']
+    k8s_object = "clusteroles"
+    def get_cluster_role(v):
+        data = []
+        headers = ['CLUSTER_ROLE', 'RULES', 'API_GROUPS', 'RESOURCES', 'VERBS']
 
         for item in role_list.items:
             if item.rules:
@@ -26,16 +26,18 @@ class ClusterRole:
                 rules[0], rules[1], rules[2]])
             else:
                 data.append([item.metadata.name, "-", "-", "-", "-"])
+        k8s.Rbac.analyse_role(data,ClusterRole.k8s_object) 
         data.append(['----------', '---', '---', '---', '---'])
-        data.append(["Total: " + str(len(role_list.items)), rules[3], "-", "-", "-"])            
-        k8s.Output.print_table(data,headers,True)
+        data.append(["Total: " + str(len(role_list.items)), rules[3], "-", "-", "-"])
+  
+        k8s.Output.print_table(data,headers,v)
         k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class ClusterRoleBinding:
     global role_binding_list
     role_binding_list = K8sClusterRoleBinding.list_cluster_role_binding(rbac)
 
-    def get_cluster_role_binding(): 
+    def get_cluster_role_binding(v): 
         data, rules_count = [], 0
         headers = ['CLUSTER_ROLE_BINDING', 'CLUSTER_ROLE', \
         'SERVICE_ACCOUNT', 'NAMESPACE']
@@ -49,14 +51,14 @@ class ClusterRoleBinding:
                 data.append([item.metadata.name, item.role_ref.name, '', ''])
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " + str(len(role_binding_list.items)), "-", "-", "-"])                 
-        k8s.Output.print_table(data,headers,True)
-        k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+        k8s.Output.print_table(data,headers,v)
+        if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class NsRole:
     global ns_role_list, namespace
     ns_role_list = K8sNameSpaceRole.list_namespaced_role('all',rbac)
-
-    def get_ns_role():    
+    k8s_object = 'roles'
+    def get_ns_role(v):    
         data = []
         headers = ['ROLE', 'NAMESPACE', 'RULES', 'API_GROUPS', 'RESOURCES', 'VERBS']
         for item in ns_role_list.items:
@@ -66,37 +68,43 @@ class NsRole:
                 len(item.rules), rules[0], rules[1], rules[2]])
             else:
                 data.append([item.metadata.name, item.metadata.namespace, "-", "-", "-", "-"])
+        k8s.Rbac.analyse_role(data,NsRole.k8s_object)
         data.append(['----------', '---', '---', '---', '---', '---'])
         data.append(["Total: " + str(len(ns_role_list.items)), "-", "-", "-",  "-", "-"])          
-        k8s.Output.print_table(data,headers,True)
+        k8s.Output.print_table(data,headers,v)
         k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 
 class NsRoleBinding:
     global ns_role_binding_list, namespace
     ns_role_binding_list = K8sNameSpaceRoleBinding.list_namespaced_role_binding('all',rbac)
-    def get_ns_role_binding():      
+    def get_ns_role_binding(v):      
         data = []
         headers = ['ROLE_BINDING', 'NAMESPACE', 'ROLE', 'GROUP_BINDING']
         for item in ns_role_binding_list.items:
             if item.subjects:
+                subjects = ""
                 for i in item.subjects:
-                    data.append([item.metadata.name, item.metadata.namespace, \
-                    item.role_ref.name, i.name])
+                    if len(item.subjects) > 1:
+                        subjects = subjects + i.name + '\n'
+                    else:
+                        subjects = i.name
+                data.append([item.metadata.name, item.metadata.namespace, \
+                item.role_ref.name, subjects])
             else:
                 data.append([item.metadata.name, item.metadata.namespace, \
-                item.role_ref.name, ''])
+                item.role_ref.name, 'None'])
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " + str(len(ns_role_binding_list.items)), "-", "-", "-"]) 
-        k8s.Output.print_table(data,headers,True)
-        k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+        k8s.Output.print_table(data,headers,v)
+        if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 
 def call_all(v):
-    if v: ClusterRole.get_cluster_role()
-    if v: ClusterRoleBinding.get_cluster_role_binding()
-    if v: NsRole.get_ns_role()
-    if v: NsRoleBinding.get_ns_role_binding()
+    ClusterRole.get_cluster_role(v)
+    ClusterRoleBinding.get_cluster_role_binding(v)
+    NsRole.get_ns_role(v)
+    NsRoleBinding.get_ns_role_binding(v)
     
     headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', 'ROLE_BINDING']
     k8s.Output.print_table([[len(role_list.items), len(role_binding_list.items), \
@@ -121,8 +129,7 @@ def main():
         else:
             assert False, "unhandled option"
 
-    print(k8s.Output.GREEN + "\nTotal time taken: " + k8s.Output.RESET + \
-    "{}s".format(round((time.time() - start_time), 2)))     
+    k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
     try:

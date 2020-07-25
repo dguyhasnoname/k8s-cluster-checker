@@ -58,8 +58,8 @@ def main():
             
     except getopt.GetoptError as err:
         print(err)
-        return
-
+        return  
+  
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
@@ -69,8 +69,7 @@ def main():
         else:
             assert False, "unhandled option"
 
-    print(k8s.Output.GREEN + "\nTotal time taken: " + k8s.Output.RESET + \
-    "{}s".format(round((time.time() - start_time), 2)))     
+    k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
     try:

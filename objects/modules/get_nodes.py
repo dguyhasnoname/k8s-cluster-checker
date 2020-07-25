@@ -1,4 +1,3 @@
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 class K8sNodes:

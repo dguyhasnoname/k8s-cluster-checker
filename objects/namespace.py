@@ -10,6 +10,7 @@ from modules.get_ds import K8sDaemonSet
 from modules.get_sts import K8sStatefulSet
 from modules.get_ns import K8sNameSpace
 from modules.get_ingress import K8sIngress
+from modules.get_jobs import K8sJobs
 
 
 config.load_kube_config()
@@ -34,7 +35,7 @@ class Namespace:
             k8s.Check.security_context(k8s_object, k8s_object_list)
             k8s.Check.health_probes(k8s_object, k8s_object_list)
             k8s.Check.resources(k8s_object, k8s_object_list)
-            if not 'damemonsets' in k8s_object: k8s.Check.replica(k8s_object, k8s_object_list)
+            if not k8s_object in ['damemonsets','jobs']: k8s.Check.replica(k8s_object, k8s_object_list)
         else:
             print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
 
@@ -46,11 +47,14 @@ class Namespace:
         all_pods = K8sPods.get_pods('all',core)
         all_svc = K8sService.get_svc('all',core)
         all_ingress = K8sIngress.get_ingress('all',networking)
+        all_jobs = K8sJobs.get_jobs('all')
 
         print ("\n\nNamespace details:")
-        data = k8s.NameSpace.get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress)
+        data = k8s.NameSpace.get_ns_details(all_ns_list,all_deployments,all_ds,\
+        all_sts,all_pods,all_svc,all_ingress,all_jobs)
 
-        total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, total_ing = 0, 0, 0, 0, 0, 0, 0
+        total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
+        total_ing , total_jobs = 0, 0, 0, 0, 0, 0, 0, 0
         for i in data:
             total_ns += 1
             total_deploy = total_deploy + i[1]
@@ -59,15 +63,17 @@ class Namespace:
             total_pods = total_pods + i[4]
             total_svc = total_svc + i[5]
             total_ing = total_ing + i[6]
+            total_jobs = total_jobs + i[7]
 
             if i[1] == 0 and i[2] == 0 and i[3] == 0 and i[4] == 0 and \
             not i[0] in ['default', 'kube-node-lease', 'kube-public', 'local']:
                 empty_ns.append([i[0]])
 
-        data.append(['----------', '---', '---', '---', '---','---', '---'])
-        data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, total_pods, total_svc, total_ing])
+        data.append(['----------', '---', '---', '---', '---','---', '---', '---'])
+        data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
+        total_pods, total_svc, total_ing, total_jobs])
                     
-        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS'] 
+        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS'] 
         k8s.Output.print_table(data,headers,True)
 
         if v:
@@ -77,6 +83,7 @@ class Namespace:
                 Namespace.get_object_data(K8sDeploy.get_deployments(ns,apps),'deployments')
                 Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns,apps),'damemonsets')
                 Namespace.get_object_data(K8sStatefulSet.get_sts(ns,apps),'statefulsets')
+                Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
 
             if len(empty_ns) > 0:
                 print (k8s.Output.YELLOW + "\n\n[WARNING] " + k8s.Output.RESET + "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
@@ -105,8 +112,7 @@ def main():
         else:
             assert False, "unhandled option"
 
-    print(k8s.Output.GREEN + "\nTotal time taken: " + k8s.Output.RESET + \
-    "{}s".format(round((time.time() - start_time), 2)))     
+    k8s.Output.time_taken(start_time)  
 
 if __name__ == "__main__":
     try:

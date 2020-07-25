@@ -1,6 +1,6 @@
 from columnar import columnar
 from click import style
-import os, re
+import os, re, time
 
 class Output:
     RED = '\033[31m'
@@ -14,7 +14,11 @@ class Output:
     global patterns
     patterns = [(u'\u2714', lambda text: style(text, fg='green')), \
                 ('True', lambda text: style(text, fg='green')), \
-                ('False', lambda text: style(text, fg='yellow'))]  
+                ('False', lambda text: style(text, fg='yellow'))]
+    
+    def time_taken(start_time):
+        print(Output.GREEN + "\nTotal time taken: " + Output.RESET + \
+        "{}s".format(round((time.time() - start_time), 2)))         
 
     def separator(color,char):
         columns, rows = os.get_terminal_size(0)
@@ -94,7 +98,7 @@ class Check:
         config = 'health checks'
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
-            if k8s_object is 'pods':
+            if 'pods' in k8s_object:
                 containers = item.spec.containers
             else:
                 containers = item.spec.template.spec.containers
@@ -339,11 +343,20 @@ class Rbac:
         data = [api_groups, resources, verbs, rules_count]
         return data
 
+    def analyse_role(data,k8s_object):
+        full_perm, delete_perm = [], []
+        for i in data:
+            if '*' in i[4]: full_perm.append([i[0]])
+            if 'delete' in i[4]: delete_perm.append([i[0]])
+        print ("\n\n{}: {}".format(k8s_object, len(data)))
+        Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs')
+        Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs')         
+
 class NameSpace:
-    def get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress):
+    def get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress,all_jobs):
         data = []
         for item in all_ns_list.items:
-            ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing = [], [], [], [], [], []
+            ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, ns_jobs = [], [], [], [], [], [], []
             ns = item.metadata.name        
             for item in all_deployments.items:
                 if item.metadata.namespace in ns:
@@ -362,6 +375,10 @@ class NameSpace:
                     ns_svc.append([item.metadata.namespace, item.metadata.name])            
             for item in all_ingress.items:
                 if item.metadata.namespace == ns:
-                    ns_ing.append([item.metadata.namespace, item.metadata.name])                                       
-            data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), len(ns_pods), len(ns_svc), len(ns_ing)])
+                    ns_ing.append([item.metadata.namespace, item.metadata.name])
+            for item in all_jobs.items:
+                if item.metadata.namespace == ns:
+                    ns_jobs.append([item.metadata.namespace, item.metadata.name])                                                           
+            data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), \
+            len(ns_pods), len(ns_svc), len(ns_ing), len(ns_jobs)])
         return data
