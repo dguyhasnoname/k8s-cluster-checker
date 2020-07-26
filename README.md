@@ -16,7 +16,7 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
 2. [nodes.py](objects/nodes.py): gives details of nodes
 3. [namespace.py](objects/namespace.py): give details of namespace objects and analyses them
     - `python namespace.py -n kube-system -v`
-    - if namespace is not give, it will return data for all namespaces
+    - if `-n` namespace is not given, it will return data for all namespaces
     - `-v` gives more details, this flag is valid for all scripts
 4. [control_plane.py](objects/control_plane.py): analyses control-plane configuration and reports missing ones
 5. [deployments.py](objects/deployments.py): gives detail for deployments in cluster and analyses them
@@ -63,8 +63,12 @@ If you want a ready-made env to run k8s-cluster-checker, please build the docker
 e.g.
 
     
-    docker build -t dguyhasnoname/k8s-cluster-checker:1.0 .
+    docker build -t dguyhasnoname/k8s-cluster-checker:latest .
     
+Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) for latest image, if you do not want to build your own image. You can download image from dockerhub.
+
+    docker pull dguyhasnoname/k8s-cluster-checker:latest
+
 Once your image is ready, run the docker container and export KUBECONFIG inside the container. You can get he kubeconfig inside the container by mapping dir inside the container from your local machine where you KUEBCONFIG file is stored:
 
     
