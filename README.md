@@ -10,6 +10,25 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
 6. rbac details
 7. k8s objects in a namespace
 
+#### k8s-cluster-checker contains below scripts:
+
+1. [cluster.py](objects/cluster.py): gives quick details of cluster and analyses configurations
+2. [nodes.py](objects/nodes.py): gives details of nodes
+3. [namespace.py](objects/namespace.py): give details of namespace objects and analyses them
+    - `python namespace.py -n kube-system -v`
+    - if namespace is not give, it will return data for all namespaces
+    - `-v` gives more details, this flag is valid for all scripts
+4. [control_plane.py](objects/control_plane.py): analyses control-plane configuration and reports missing ones
+5. [deployments.py](objects/deployments.py): gives detail for deployments in cluster and analyses them
+6. [daemonsets.py](objects/daemonsets.py): gives detail for daemonsets in cluster and analyses them
+7. [statefulsets.py](objects/statefulsets.py): gives detail for statefulsets in cluster and analyses them
+8. [services.py](objects/services.py): gives detail for services in cluster and analyses them
+9. [jobs.py](objects/jobs.py): gives detail for jobs in cluster and analyses them
+10. [pods.py](objects/pods.py): gives detail for pods in cluster in all namespaces and analyses them
+11. [ingress.py](objects/ingress.py): gives detail for ingress in cluster and analyses them
+12. [rbac.py](objects/rbac.py): gives detail for rbac in cluster and analyses them
+13. [images.py](objects/images.py): gives detail for images used by workloads in cluster and reports back if any old images found.
+
 ## Pre-requisites
 
 1. python3 with below packages:
@@ -64,22 +83,10 @@ Now you are ready to run k8s-cluster-checker scripts:
     cd /apps
     python cluster.py
 
+### Sample run
 
-## about k8s-cluster-checker scripts
+![sample_run](/docs/imgs/sample_run.png)
 
-1. [cluster.py](objects/cluster.py): gives quick details of cluster and analyses configurations
-2. [nodes.py](objects/nodes.py): gives details of nodes
-3. [namespace.py](objects/namespace.py): give details of namespace objects and analyses them
-4. [control_plane.py](objects/control_plane.py): analyses control-plane configuration and reports missing ones
-5. [deployments.py](objects/deployments.py): gives detail for deployments in cluster and analyses them
-6. [daemonsets.py](objects/daemonsets.py): gives detail for daemonsets in cluster and analyses them
-7. [statefulsets.py](objects/statefulsets.py): gives detail for statefulsets in cluster and analyses them
-8. [services.py](objects/services.py): gives detail for services in cluster and analyses them
-9. [jobs.py](objects/jobs.py): gives detail for jobs in cluster and analyses them
-10. [pods.py](objects/pods.py): gives detail for pods in cluster in all namespaces and analyses them
-11. [ingress.py](objects/ingress.py): gives detail for ingress in cluster and analyses them
-12. [rbac.py](objects/rbac.py): gives detail for rbac in cluster and analyses them
-13. [images.py](objects/images.py): gives detail for images used by workloads in cluster and reports back if any old images found.
 
 
 
