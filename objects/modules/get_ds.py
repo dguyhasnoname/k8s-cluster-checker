@@ -1,7 +1,11 @@
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+apps = client.AppsV1Api()
+
 class K8sDaemonSet:
-    def get_damemonsets(ns,apps):           
+    def get_damemonsets(ns):           
         try:
             print ("\n[INFO] Fetching dameonsets data...")
             if ns != 'all': 

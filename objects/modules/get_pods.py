@@ -1,8 +1,11 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+core = client.CoreV1Api()
+
 class K8sPods:    
-    def get_pods(ns,core):
+    def get_pods(ns):
         try:
             print ("\n[INFO] Fetching pods data...")
             if ns == 'all':          

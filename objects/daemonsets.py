@@ -1,11 +1,8 @@
-from kubernetes import client, config
 import sys, time, os, getopt
 import objects as k8s
 from modules.get_ds import K8sDaemonSet
 
 start_time = time.time()
-config.load_kube_config()
-apps = client.AppsV1Api()
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -22,7 +19,7 @@ Before running script export KUBECONFIG file as env:
 
 class _Daemonset:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system',apps)
+    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system')
     k8s_object = 'daemonset'
 
     def check_damemonset_security(v):

@@ -1,35 +1,35 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, re
 import requests
 import objects as k8s
-import deployments as deploy
+from modules.get_deploy import K8sDeploy
 
 start_time = time.time()
 
 class Images:
     global k8s_object, k8s_object_list
-    k8s_object_list = deploy.K8sDeploy.get_deployments("")
+    k8s_object_list = K8sDeploy.get_deployments("all")
 
     def get_images():
         data = []
         for item in k8s_object_list.items:
             for container in item.spec.template.spec.containers:
-                data.append([item.metadata.name, container.name, container.image, container.image_pull_policy])
+                data.append([item.metadata.namespace, item.metadata.name, container.name, container.image, \
+                container.image_pull_policy])
         return data
     
     def list_images():
-        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY']   
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE:TAG', 'IMAGE_PULL_POLICY']   
         data = Images.get_images()
         k8s.Output.print_table(data,headers)
 
     def get_last_updated_tag():
         repo = []
         data = Images.get_images()
-        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', 'IMAGE', 'LATEST_TAG_AVAILABLE'] 
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', \
+        'IMAGE:TAG', 'LATEST_TAG_AVAILABLE'] 
         result = []
         for image in data:
-            image_repo_name = image[2].rsplit(':', 1)[0]
+            image_repo_name = image[3].rsplit(':', 1)[0]
             if not any(x in image_repo_name for x in ['gcr','quay','docker.io']):
                 repo_image_url = "https://hub.docker.com/v2/repositories/{}/tags".format(image_repo_name)
                 results = requests.get(repo_image_url).json()['results']
@@ -45,7 +45,7 @@ class Images:
             #     print (results)
             else:
                 repo['name'] = u'\u2717'
-            result.append([image[0], image[1], image[3], image[2], repo['name']])
+            result.append([image[0], image[1], image[2], image[4], image[3], repo['name']])
         k8s.Output.print_table(result,headers,True)
 
     def image_recommendation():
@@ -58,9 +58,13 @@ class Images:
                 if_not_present.append(True)
             if 'Always' in image[-1]:
                 always.append(True)
-        k8s.Output.bar(if_not_present, data,'with image pull-policy','deployments','"IfNotPresent"')
-        k8s.Output.bar(always, data,'with image pull-policy','deployments','"Always"')                
-        k8s.Output.bar(config_not_defined, data,'has not defined recommended image pull-policy','deployments','"Always"')
+        print ("\n{}: {}".format('images', len(k8s_object_list.items)))
+        k8s.Output.bar(if_not_present, data,'with image pull-policy', \
+        'deployments', '"IfNotPresent"')
+        k8s.Output.bar(always, data,'with image pull-policy', 'deployments',\
+         '"Always"')                
+        k8s.Output.bar(config_not_defined, data, 'has not defined recommended image pull-policy', \
+        'deployments', '"Always"')
 
 def main():
     # Images.list_images()

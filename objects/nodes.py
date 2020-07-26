@@ -1,17 +1,12 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
 import objects as k8s
 from modules.get_nodes import K8sNodes
 
-config.load_kube_config()
-core = client.CoreV1Api()
-apps = client.AppsV1Api()
-
 class _Nodes:
-    global k8s_object, k8s_object_list
-    k8s_object_list = K8sNodes.get_nodes(core)
+    global k8s_object, k8s_object_list, k8s_node
+    k8s_object_list = K8sNodes.get_nodes()
+
     k8s_object = 'nodes'
 
     def get_nodes_details(v):
@@ -36,7 +31,7 @@ class _Nodes:
             data.append([item.metadata.name, item.status.node_info.kubelet_version, \
             tag, item.status.capacity['cpu'], \
             node_memory_gb, item.spec.pod_cidr, item.status.node_info.os_image, \
-            docker_version])                 
+            docker_version])          
             
         total_cpu, total_mem, masters, nodes, etcd, others = 0, 0, 0, 0, 0, 0
         for i in data:

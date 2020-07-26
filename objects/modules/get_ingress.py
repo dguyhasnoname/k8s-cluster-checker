@@ -1,7 +1,11 @@
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+networking = client.NetworkingV1beta1Api()
+
 class K8sIngress:
-    def get_ingress(ns,networking):           
+    def get_ingress(ns):           
         try:
             print ("\n[INFO] Fetching ingress data...")
             if ns != 'all': 

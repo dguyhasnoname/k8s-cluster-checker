@@ -1,17 +1,15 @@
-from kubernetes import client, config
 import sys, time, os, getopt, argparse
 import objects as k8s
 from modules.get_ingress import K8sIngress
 from modules.get_ns import K8sNameSpace
 
 start_time = time.time()
-config.load_kube_config()
-networking = client.NetworkingV1beta1Api()
+
 core = client.CoreV1Api()
 
 class _Ingress:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sIngress.get_ingress("all",networking)
+    k8s_object_list = K8sIngress.get_ingress("all")
     k8s_object = 'ingress'
 
     def ingress_count():

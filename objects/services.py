@@ -1,15 +1,12 @@
-from kubernetes import client, config
 import sys, time, os, getopt
 import objects as k8s
 from modules.get_svc import K8sService
 
 start_time = time.time()
-config.load_kube_config()
-core = client.CoreV1Api()
 
 class _Service:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sService.get_svc('all',core)
+    k8s_object_list = K8sService.get_svc('all')
     k8s_object = 'services'
 
     def list_service(v):

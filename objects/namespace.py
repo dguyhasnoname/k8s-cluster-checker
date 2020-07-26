@@ -1,5 +1,4 @@
 from modules import message
-from kubernetes import client, config
 import sys, time, os, getopt, argparse
 start_time = time.time()
 import objects as k8s
@@ -12,15 +11,9 @@ from modules.get_ns import K8sNameSpace
 from modules.get_ingress import K8sIngress
 from modules.get_jobs import K8sJobs
 
-
-config.load_kube_config()
-core = client.CoreV1Api()
-apps = client.AppsV1Api()
-networking = client.NetworkingV1beta1Api()
-
 class Namespace:
     global all_ns_list
-    all_ns_list = K8sNameSpace.get_ns(core)
+    all_ns_list = K8sNameSpace.get_ns()
 
     # def workload_sharing_data(data):
     #     data = sorted(data, key=lambda x: x[4])[::-1]
@@ -41,12 +34,12 @@ class Namespace:
 
     def get_ns_data(v):
         data, sum_list, empty_ns = [], [], []
-        all_deployments = K8sDeploy.get_deployments('all',apps)
-        all_ds = K8sDaemonSet.get_damemonsets('all',apps)
-        all_sts = K8sStatefulSet.get_sts('all',apps)
-        all_pods = K8sPods.get_pods('all',core)
-        all_svc = K8sService.get_svc('all',core)
-        all_ingress = K8sIngress.get_ingress('all',networking)
+        all_deployments = K8sDeploy.get_deployments('all')
+        all_ds = K8sDaemonSet.get_damemonsets('all')
+        all_sts = K8sStatefulSet.get_sts('all')
+        all_pods = K8sPods.get_pods('all')
+        all_svc = K8sService.get_svc('all')
+        all_ingress = K8sIngress.get_ingress('all')
         all_jobs = K8sJobs.get_jobs('all')
 
         print ("\n\nNamespace details:")
@@ -80,9 +73,9 @@ class Namespace:
             for item in all_ns_list.items:
                 ns = item.metadata.name  
                 print (k8s.Output.BOLD + "\n\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
-                Namespace.get_object_data(K8sDeploy.get_deployments(ns,apps),'deployments')
-                Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns,apps),'damemonsets')
-                Namespace.get_object_data(K8sStatefulSet.get_sts(ns,apps),'statefulsets')
+                Namespace.get_object_data(K8sDeploy.get_deployments(ns),'deployments')
+                Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns),'damemonsets')
+                Namespace.get_object_data(K8sStatefulSet.get_sts(ns),'statefulsets')
                 Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
 
             if len(empty_ns) > 0:

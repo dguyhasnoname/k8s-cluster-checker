@@ -7,7 +7,6 @@ import nodes as node
 import namespace as ns
 import rbac as rbac
 
-
 class Cluster:
     def get_node_data(v):
         print ("\n\nNode details:")

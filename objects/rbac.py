@@ -1,5 +1,4 @@
 from modules import message
-from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
@@ -7,13 +6,9 @@ import objects as k8s
 from modules.get_rbac import K8sClusterRole, K8sClusterRoleBinding, \
 K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
-
-config.load_kube_config()
-rbac = client.RbacAuthorizationV1Api()
-
 class ClusterRole:
     global role_list
-    role_list = K8sClusterRole.list_cluster_role(rbac)
+    role_list = K8sClusterRole.list_cluster_role()
     k8s_object = "clusteroles"
     def get_cluster_role(v):
         data = []
@@ -35,7 +30,7 @@ class ClusterRole:
 
 class ClusterRoleBinding:
     global role_binding_list
-    role_binding_list = K8sClusterRoleBinding.list_cluster_role_binding(rbac)
+    role_binding_list = K8sClusterRoleBinding.list_cluster_role_binding()
 
     def get_cluster_role_binding(v): 
         data, rules_count = [], 0
@@ -56,7 +51,7 @@ class ClusterRoleBinding:
 
 class NsRole:
     global ns_role_list, namespace
-    ns_role_list = K8sNameSpaceRole.list_namespaced_role('all',rbac)
+    ns_role_list = K8sNameSpaceRole.list_namespaced_role('all')
     k8s_object = 'roles'
     def get_ns_role(v):    
         data = []
@@ -77,7 +72,7 @@ class NsRole:
 
 class NsRoleBinding:
     global ns_role_binding_list, namespace
-    ns_role_binding_list = K8sNameSpaceRoleBinding.list_namespaced_role_binding('all',rbac)
+    ns_role_binding_list = K8sNameSpaceRoleBinding.list_namespaced_role_binding('all')
     def get_ns_role_binding(v):      
         data = []
         headers = ['ROLE_BINDING', 'NAMESPACE', 'ROLE', 'GROUP_BINDING']

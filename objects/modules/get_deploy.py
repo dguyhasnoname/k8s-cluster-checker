@@ -1,7 +1,11 @@
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+apps = client.AppsV1Api()
+
 class K8sDeploy:
-    def get_deployments(ns,apps):
+    def get_deployments(ns):
         try:
             print ("\n[INFO] Fetching deployments data...")
             if ns != 'all': 

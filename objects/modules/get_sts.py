@@ -1,7 +1,11 @@
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+apps = client.AppsV1Api()
+
 class K8sStatefulSet:
-    def get_sts(ns,apps):
+    def get_sts(ns):
         print ("\n[INFO] Fetching statefulSets data...")
         try:
             if ns != 'all': 

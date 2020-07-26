@@ -1,13 +1,9 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, os, getopt, time
 from time import sleep
 import objects as k8s
 from modules.get_deploy import K8sDeploy
 
 start_time = time.time()
-config.load_kube_config()
-apps = client.AppsV1Api()
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -24,7 +20,7 @@ Before running script export KUBECONFIG file as env:
 
 class _Deployment:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDeploy.get_deployments("kube-system",apps)
+    k8s_object_list = K8sDeploy.get_deployments("kube-system")
     k8s_object = 'deployment'
 
     def get_namespaced_deployment_list(v):

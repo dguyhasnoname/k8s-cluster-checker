@@ -1,12 +1,8 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse
 import objects as k8s
 from modules.get_pods import K8sPods
 
 start_time = time.time()
-config.load_kube_config()
-core = client.CoreV1Api()
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -40,7 +36,7 @@ class _Pods:
     #     for i in range(100):
     #         k8s_object_list = get_pods()
     #         bar()
-    k8s_object_list = K8sPods.get_pods('all',core)
+    k8s_object_list = K8sPods.get_pods('all')
     k8s_object = 'pods'
 
     def get_namespaced_pod_list(v):

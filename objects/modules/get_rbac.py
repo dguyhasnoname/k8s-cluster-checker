@@ -1,7 +1,11 @@
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+config.load_kube_config()
+rbac = client.RbacAuthorizationV1Api()
+
 class K8sClusterRole:
-    def list_cluster_role(rbac):
+    def list_cluster_role():
         print ("\n[INFO] Fetching clusterRoles data...")
         try:
             cluster_roles = rbac.list_cluster_role(timeout_seconds=10)
@@ -10,7 +14,7 @@ class K8sClusterRole:
             print("Exception when calling RbacAuthorizationV1Api->list_cluster_role: %s\n" % e)
 
 class K8sClusterRoleBinding:
-    def list_cluster_role_binding(rbac):
+    def list_cluster_role_binding():
         print ("\n[INFO] Fetching clusterRoleBindings data...")
         try:
             cluster_role_bindings = rbac.list_cluster_role_binding(timeout_seconds=10)
@@ -19,7 +23,7 @@ class K8sClusterRoleBinding:
             print("Exception when calling RbacAuthorizationV1Api->list_cluster_role_binding: %s\n" % e)
 
 class K8sNameSpaceRole:
-    def list_namespaced_role(ns,rbac):
+    def list_namespaced_role(ns):
         print ("\n[INFO] Fetching roles data...")
         try:
             if ns != 'all': 
@@ -32,7 +36,7 @@ class K8sNameSpaceRole:
             print("Exception when calling RbacAuthorizationV1Api->list_namespaced_role: %s\n" % e)
 
 class K8sNameSpaceRoleBinding:
-    def list_namespaced_role_binding(ns,rbac):
+    def list_namespaced_role_binding(ns):
         print ("\n[INFO] Fetching roleBindings data...")
         try:
             if ns != 'all': 
