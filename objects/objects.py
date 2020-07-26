@@ -6,6 +6,7 @@ class Output:
     RED = '\033[31m'
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
+    CYAN = '\033[36m'
     RESET = '\033[0m'  
     BOLD = '\033[1;30m'
     # u'\u2717' means values is None or not defined
@@ -33,7 +34,7 @@ class Output:
         else:
             return
 
-    def bar(not_defined,data,message,k8s_object,config):
+    def bar(not_defined,data,message,k8s_object,config,color):
         show_bar = []
         if len(not_defined) == 0:
             return
@@ -46,7 +47,7 @@ class Output:
                 show_bar.append(u'\u2591')
 
         if percentage != 0:
-            print ("{} {}% | {} {} {} {}.".format("".join(show_bar),percentage, \
+            print (color + "{}".format("".join(show_bar)) + Output.RESET + " {}% | {} {} {} {}.".format(percentage, \
             len(not_defined), k8s_object, message, config))
         else:
             print (Output.GREEN + "All {} has {} defined.".format(k8s_object,config) + Output.RESET)       
@@ -82,20 +83,20 @@ class Check:
                     config_not_defined.append(True)
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined, data, "container's with no",k8s_object,config)
+        Output.bar(config_not_defined, data, "container's with no",k8s_object,config, Output.RED)
         Output.bar(privileged_containers, data,'have', k8s_object, \
-        'privileged containers running')
+        'privileged containers running', Output.RED)
         Output.bar(allow_privilege_escalation, data,'have containers running in', \
-        k8s_object,'allow privilege escalation mode')
-        Output.bar(run_as_user, data, "container's running have", k8s_object, 'user defined')
-        Output.bar(run_as_non_root, data,"container's running with", k8s_object, 'non root user')
+        k8s_object,'allow privilege escalation mode', Output.RED)
+        Output.bar(run_as_user, data, "container's running have", k8s_object, 'user defined', Output.GREEN)
+        Output.bar(run_as_non_root, data,"container's running with", k8s_object, 'non root user', Output.GREEN)
         Output.bar(read_only_root_filesystem, data, "container's running have", \
-        k8s_object,'read-only root filesystem')
+        k8s_object,'read-only root filesystem', Output.GREEN)
 
         return data
 
     def health_probes(k8s_object,k8s_object_list):
-        data, config_not_defined, readiness_probe, liveness_probe = [], [], [], []
+        data, config_not_defined, readiness_probe, liveness_probe, both = [], [], [], [], []
         config = 'health checks'
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -106,8 +107,7 @@ class Check:
             for container in containers:
                 if container.readiness_probe is not None and container.liveness_probe is not None:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2714', u'\u2714']) 
-                    readiness_probe.append(True)
-                    liveness_probe.append(True) 
+                    both.append(True)
                 elif container.readiness_probe is None and container.liveness_probe is not None:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2717', u'\u2714'])
                     liveness_probe.append(True)                       
@@ -119,9 +119,10 @@ class Check:
                     config_not_defined.append(False)
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined,data, "container's running with no",k8s_object,config)
-        Output.bar(liveness_probe,data, "container's running with",k8s_object,'liveness probe defined')
-        Output.bar(readiness_probe,data,"container's running with",k8s_object,'readiness probe defined')
+        Output.bar(config_not_defined,data, "container's running with no",k8s_object,config, Output.RED)
+        Output.bar(liveness_probe,data, "container's running with",k8s_object,'liveness probe defined', Output.YELLOW)
+        Output.bar(readiness_probe,data,"container's running with",k8s_object,'readiness probe defined', Output.YELLOW)
+        Output.bar(both,data,"container's running with both",k8s_object,'liveness and readiness probe defined', Output.GREEN)
         return data
 
     def resources(k8s_object,k8s_object_list):
@@ -147,10 +148,10 @@ class Check:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2717', u'\u2717'])                
                     config_not_defined.append(False)
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined,data,"container's running without",k8s_object,config)
-        Output.bar(requests,data,"container's running with",k8s_object,'requests defined')
-        Output.bar(limits,data,"container's running with",k8s_object,'limits defined')
-        Output.bar(both,data,"container's running with both",k8s_object,'limits and requests defined')
+        Output.bar(config_not_defined,data,"container's running without",k8s_object,config, Output.RED)
+        Output.bar(requests,data,"container's running with",k8s_object,'requests defined', Output.YELLOW)
+        Output.bar(limits,data,"container's running with",k8s_object,'limits defined', Output.YELLOW)
+        Output.bar(both,data,"container's running with both",k8s_object,'limits and requests defined', Output.GREEN)
         return data
 
     def strategy(k8s_object,k8s_object_list):
@@ -172,7 +173,7 @@ class Check:
 
         if len(single_replica_count) > 0:
             print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-            Output.bar(single_replica_count, data, 'are running with 1', k8s_object, config)              
+            Output.bar(single_replica_count, data, 'are running with 1', k8s_object, config, Output.RED)              
             return data
 
     #check for kube2iam
@@ -225,9 +226,9 @@ class Check:
                 besteffort.append([item.metadata.namespace, item.metadata.name])
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(guaranteed,data,'is having Guaranteed',k8s_object,config)
-        Output.bar(burstable,data,'is having Burstable',k8s_object,config)
-        Output.bar(besteffort,data,'is having BestEffort',k8s_object,config)
+        Output.bar(guaranteed,data, 'is having Guaranteed', k8s_object, config, Output.GREEN)
+        Output.bar(burstable,data, 'is having Burstable', k8s_object, config, Output.YELLOW)
+        Output.bar(besteffort,data, 'is having BestEffort', k8s_object, config, Output.RED)
 
         return data
 
@@ -251,9 +252,9 @@ class Check:
                 never.append(True)  
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))            
-        Output.bar(if_not_present, data, "container's with image pull-policy", k8s_object, '"IfNotPresent"')
-        Output.bar(always, data, "container's with image pull-policy", k8s_object, '"Always"')
-        Output.bar(never, data, "container's with image pull-policy", k8s_object, '"Never"')
+        Output.bar(if_not_present, data, "container's with image pull-policy", k8s_object, '"IfNotPresent"', Output.YELLOW)
+        Output.bar(always, data, "container's with image pull-policy", k8s_object, '"Always"', Output.GREEN)
+        Output.bar(never, data, "container's with image pull-policy", k8s_object, '"Never"', Output.RED)
         return data 
 
 class IngCheck:
@@ -341,11 +342,11 @@ class Service:
                 others_svc.append([item.metadata.namespace, item.metadata.name])
         print ("\n{}: {} {}".format('service type: ', len(k8s_object_list.items), k8s_object))                
         Output.bar(cluster_ip_svc, k8s_object_list.items, 'out of ' + \
-        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'ClusterIP')
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'ClusterIP', Output.CYAN)
         Output.bar(lb_svc, k8s_object_list.items, 'out of ' + \
-        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'LoadBalancer')
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'LoadBalancer', Output.CYAN)
         Output.bar(others_svc, k8s_object_list.items, 'out of ' + \
-        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'others')        
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'others', Output.RED)        
 
 class Rbac:
     def get_rules(rules):
@@ -368,8 +369,8 @@ class Rbac:
             if '*' in i[4]: full_perm.append([i[0]])
             if 'delete' in i[4]: delete_perm.append([i[0]])
         print ("\n{}: {}".format(k8s_object, len(data)))
-        Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs')
-        Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs')         
+        Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs', Output.RED)
+        Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs', Output.RED)         
 
 class NameSpace:
     def get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data):

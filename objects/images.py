@@ -68,11 +68,11 @@ class Images:
                 always.append(True)
         print ("\n{}: {}".format('images', len(k8s_object_list.items)))
         k8s.Output.bar(if_not_present, data,'with image pull-policy', \
-        'deployments', '"IfNotPresent"')
+        'deployments', '"IfNotPresent"', k8s.Output.YELLOW)
         k8s.Output.bar(always, data,'with image pull-policy', 'deployments',\
-         '"Always"')                
+         '"Always"', k8s.Output.GREEN)                
         k8s.Output.bar(config_not_defined, data, 'has not defined recommended image pull-policy', \
-        'deployments', '"Always"')
+        'deployments', '"Always"', k8s.Output.RED)
 
 def call_all(v,ns):
     Images(ns)

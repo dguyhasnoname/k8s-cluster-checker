@@ -4,8 +4,9 @@ start_time = time.time()
 import objects as k8s
 import control_plane as cp
 import nodes as node
-import namespace as ns
 import rbac as rbac
+from modules.get_pods import K8sPods
+import namespace as ns
 
 class Cluster:
     def get_node_data(v):
@@ -13,7 +14,15 @@ class Cluster:
         node._Nodes.get_nodes_details(v)
     
     def get_namespaced_data(v):
-        ns.Namespace.get_ns_data(v,'')
+        #cluster_pods_list = K8sPods.get_pods('all')
+
+        data = ns.Namespace.get_ns_data(False,'')
+        cluster_pods_list = data[1]
+        k8s.Check.security_context('pods',cluster_pods_list)
+        k8s.Check.health_probes('pods',cluster_pods_list)
+        k8s.Check.resources('pods',cluster_pods_list)
+        k8s.Check.qos('pods',cluster_pods_list)
+        k8s.Check.image_pull_policy('pods',cluster_pods_list)
 
     def get_ctrl_plane_data(v):
         print ("\nControl plane details:")
@@ -22,9 +31,10 @@ class Cluster:
     
     def get_rbac_details(v):
         print ("\nRBAC details:")
-        rbac.call_all(v)
+        rbac.call_all(v,'')
 
 def call_all(v):
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_node_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_ctrl_plane_data(v)

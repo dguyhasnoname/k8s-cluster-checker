@@ -67,7 +67,7 @@ class _Pods:
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
-    def check_image_pullpolicy(v):
+    def check_image_pull_policy(v):
         headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', 'IMAGE', 'LATEST_TAG_AVAILABLE']
         data = k8s.Check.image_pull_policy(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
@@ -78,7 +78,7 @@ def call_all(v,ns):
     _Pods.check_pod_health_probes(v)
     _Pods.check_pod_resources(v)
     _Pods.check_pod_qos(v)
-    _Pods.check_image_pullpolicy(v)
+    _Pods.check_image_pull_policy(v)
     _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
 
 def main():

@@ -65,14 +65,14 @@ e.g.
     
     docker build -t dguyhasnoname/k8s-cluster-checker:latest .
     
-Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) for latest image, if you do not want to build your own image. You can download image from dockerhub.
+Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) for latest image, if you do not want to build your own image. You can download the latest image from dockerhub as the dockerhub image build is integrated with this repo and it polls this repo for update.
 
     docker pull dguyhasnoname/k8s-cluster-checker:latest
 
 Once your image is ready, run the docker container and export KUBECONFIG inside the container. You can get he kubeconfig inside the container by mapping dir inside the container from your local machine where you KUEBCONFIG file is stored:
 
     
-    docker run -it -v /dguyhasnoname/k8sconfig:/k8sconfig dguyhasnoname/k8s-cluster-checker:1.0
+    docker run -it -v /dguyhasnoname/k8sconfig:/k8sconfig dguyhasnoname/k8s-cluster-checker:latest
     
 
 Now you should be inside the container. Please export KUBECONFIG:
@@ -89,6 +89,8 @@ Now you are ready to run k8s-cluster-checker scripts:
 
 ### Sample run
 
+![sample_run_1](/docs/imgs/sample_run_1.png)
+![sample_run_2](/docs/imgs/sample_run_2.png)
 ![sample_run](/docs/imgs/sample_run.png)
 
 
