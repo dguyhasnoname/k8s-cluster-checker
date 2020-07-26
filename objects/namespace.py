@@ -98,7 +98,7 @@ class Namespace:
                 print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
                 "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
                 k8s.Output.print_table(empty_ns,headers,True)
-        return [ data , pods]
+        return [ data , pods, svc, deployments, ds, jobs, ingress ]
         
 def call_all(v,ns):
     Namespace.get_ns_data(v,ns)

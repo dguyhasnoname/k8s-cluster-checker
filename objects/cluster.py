@@ -5,8 +5,8 @@ import objects as k8s
 import control_plane as cp
 import nodes as node
 import rbac as rbac
-from modules.get_pods import K8sPods
 import namespace as ns
+import services as svc
 
 class Cluster:
     def get_node_data(v):
@@ -17,12 +17,14 @@ class Cluster:
         #cluster_pods_list = K8sPods.get_pods('all')
 
         data = ns.Namespace.get_ns_data(False,'')
-        cluster_pods_list = data[1]
+        cluster_pods_list, cluster_svc_list = data[1], data[2]
         k8s.Check.security_context('pods',cluster_pods_list)
         k8s.Check.health_probes('pods',cluster_pods_list)
         k8s.Check.resources('pods',cluster_pods_list)
         k8s.Check.qos('pods',cluster_pods_list)
         k8s.Check.image_pull_policy('pods',cluster_pods_list)
+        k8s.Service.check_service('services', cluster_svc_list)
+        
 
     def get_ctrl_plane_data(v):
         print ("\nControl plane details:")

@@ -90,7 +90,7 @@ Now you are ready to run k8s-cluster-checker scripts:
 ### Sample run
 
 ![sample_run_1](/docs/imgs/sample_run_1.png)
-![sample_run_2](/docs/imgs/sample_run_2.png)
+![sample_run_3](/docs/imgs/sample_run_3.png)
 ![sample_run](/docs/imgs/sample_run.png)
 
 
