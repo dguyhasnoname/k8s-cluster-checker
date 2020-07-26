@@ -19,19 +19,15 @@ Before running script export KUBECONFIG file as env:
     args=parser.parse_args()
 
 class _Deployment:
-    global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDeploy.get_deployments('all')
-    k8s_object = 'deployment'
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'
+        k8s_object_list = K8sDeploy.get_deployments(ns)
 
-    def get_namespaced_deployment_list(v):
-        data = []
-        all_deployments = _Deployment.get_deployments('all')
-        headers = ['NAMESPACE', 'DEPLOYMENTS']
-        for item in all_deployments.items:
-            data.append([item.metadata.namespace, item.metadata.name])
-        if v: print ("Total deployments: {}".format(len(data)))
-        k8s.Output.print_table(data,headers,v)
-        return data    
+    global k8s_object
+    k8s_object = 'deployment'  
 
     def check_deployment_security(v):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
@@ -64,7 +60,8 @@ class _Deployment:
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)       
 
-def call_all(v):
+def call_all(v,ns):
+    _Deployment(ns)
     _Deployment.check_deployment_security(v)
     _Deployment.check_deployment_health_probes(v)
     _Deployment.check_deployment_resources(v)
@@ -74,25 +71,27 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
-        # print help information and exit:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
-    k8s.Output.time_taken(start_time)
+    call_all(verbose,ns)
+    k8s.Output.time_taken(start_time) 
 
 if __name__ == "__main__":
     try:

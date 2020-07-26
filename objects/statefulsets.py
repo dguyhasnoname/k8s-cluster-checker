@@ -5,8 +5,13 @@ from modules.get_sts import K8sStatefulSet
 start_time = time.time()
 
 class _Sts:
-    global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sStatefulSet.get_sts('all')
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'
+        k8s_object_list = K8sStatefulSet.get_sts(ns)    
+    global k8s_object_list
     k8s_object = 'statefulsets'
 
     def check_sts_security(v):
@@ -30,7 +35,8 @@ class _Sts:
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
-def call_all(v):
+def call_all(v,ns):
+    _Sts(ns)
     _Sts.check_sts_security(v)
     _Sts.check_sts_health_probes(v)
     _Sts.check_sts_resources(v)
@@ -38,24 +44,26 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
-        # print help information and exit:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)    
 
 if __name__ == "__main__":

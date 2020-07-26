@@ -5,16 +5,20 @@ from modules.get_ns import K8sNameSpace
 
 start_time = time.time()
 
-core = client.CoreV1Api()
-
 class _Ingress:
-    global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sIngress.get_ingress("all")
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all' 
+        k8s_object_list = K8sIngress.get_ingress(ns)
+ 
+    global k8s_object
     k8s_object = 'ingress'
 
     def ingress_count():
         data, total_ing = [], 0
-        ns_list = K8sNameSpace.get_ns(core)
+        ns_list = K8sNameSpace.get_ns()
         headers = ['NAMESPACE', 'INGRESS']
         for ns in ns_list.items:
             ing_count = 0
@@ -35,29 +39,33 @@ class _Ingress:
         data = k8s.IngCheck.list_ingress(k8s_object_list,v)
         k8s.Output.print_table(data,headers,v)
 
-def call_all(v):
+def call_all(v,ns):
+    _Ingress(ns)
     _Ingress.ingress_count()
     _Ingress.list_ingress(v)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":

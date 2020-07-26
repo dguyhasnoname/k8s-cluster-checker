@@ -82,14 +82,14 @@ class Check:
                     config_not_defined.append(True)
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined, data,'container with no',k8s_object,config)
-        Output.bar(privileged_containers, data,'running have', k8s_object, \
-        'privileged containers')
+        Output.bar(config_not_defined, data, "container's with no",k8s_object,config)
+        Output.bar(privileged_containers, data,'have', k8s_object, \
+        'privileged containers running')
         Output.bar(allow_privilege_escalation, data,'have containers running in', \
         k8s_object,'allow privilege escalation mode')
-        Output.bar(run_as_user, data, 'container running has', k8s_object, 'user defined')
-        Output.bar(run_as_non_root, data,'container running with', k8s_object, 'non root user')
-        Output.bar(read_only_root_filesystem, data, 'container running has', \
+        Output.bar(run_as_user, data, "container's running have", k8s_object, 'user defined')
+        Output.bar(run_as_non_root, data,"container's running with", k8s_object, 'non root user')
+        Output.bar(read_only_root_filesystem, data, "container's running have", \
         k8s_object,'read-only root filesystem')
 
         return data
@@ -119,13 +119,13 @@ class Check:
                     config_not_defined.append(False)
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined,data,'container with no',k8s_object,config)
-        Output.bar(liveness_probe,data,'container with',k8s_object,'liveness probe defined')
-        Output.bar(readiness_probe,data,'container with',k8s_object,'readiness probe defined')
+        Output.bar(config_not_defined,data, "container's running with no",k8s_object,config)
+        Output.bar(liveness_probe,data, "container's running with",k8s_object,'liveness probe defined')
+        Output.bar(readiness_probe,data,"container's running with",k8s_object,'readiness probe defined')
         return data
 
     def resources(k8s_object,k8s_object_list):
-        data, config_not_defined, limits, requests = [], [], [], []
+        data, config_not_defined, limits, requests, both = [], [], [], [], []
         config = 'resource limits/requests'      
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -136,8 +136,7 @@ class Check:
             for container in containers:
                 if container.resources.limits is not None and container.resources.requests is not None:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2714', u'\u2714'])
-                    limits.append(True)
-                    requests.append(True)
+                    both.append(True)
                 elif container.resources.limits is None and container.resources.requests is not None:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2717', u'\u2714'])
                     requests.append(True)
@@ -148,9 +147,10 @@ class Check:
                     data.append([item.metadata.namespace, k8s_object_name, container.name, u'\u2717', u'\u2717'])                
                     config_not_defined.append(False)
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined,data,'containers without',k8s_object,config)
-        Output.bar(requests,data,'containers with',k8s_object,'requests defined')
-        Output.bar(limits,data,'containers without',k8s_object,'limits defined')
+        Output.bar(config_not_defined,data,"container's running without",k8s_object,config)
+        Output.bar(requests,data,"container's running with",k8s_object,'requests defined')
+        Output.bar(limits,data,"container's running with",k8s_object,'limits defined')
+        Output.bar(both,data,"container's running with both",k8s_object,'limits and requests defined')
         return data
 
     def strategy(k8s_object,k8s_object_list):
@@ -251,9 +251,9 @@ class Check:
                 never.append(True)  
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), k8s_object))            
-        Output.bar(if_not_present, data, 'container with image pull-policy', k8s_object, '"IfNotPresent"')
-        Output.bar(always, data, 'container with image pull-policy', k8s_object, '"Always"')
-        Output.bar(never, data, 'container with image pull-policy', k8s_object, '"Never"')
+        Output.bar(if_not_present, data, "container's with image pull-policy", k8s_object, '"IfNotPresent"')
+        Output.bar(always, data, "container's with image pull-policy", k8s_object, '"Always"')
+        Output.bar(never, data, "container's with image pull-policy", k8s_object, '"Never"')
         return data 
 
 class IngCheck:

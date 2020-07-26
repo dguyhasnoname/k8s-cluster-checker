@@ -5,8 +5,13 @@ from modules.get_svc import K8sService
 start_time = time.time()
 
 class _Service:
-    global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sService.get_svc('all')
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'
+        k8s_object_list = K8sService.get_svc(ns)    
+    global k8s_object
     k8s_object = 'services'
 
     def list_service(v):
@@ -30,30 +35,34 @@ class _Service:
         if v:
             k8s.Service.check_service(k8s_object, k8s_object_list)
 
-def call_all(v):
+def call_all(v,ns):
+    _Service(ns)
     _Service.list_service(v)
     _Service.analyse_service(v)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
-        return  
-  
+        return
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
-    k8s.Output.time_taken(start_time)     
+    call_all(verbose,ns)
+    k8s.Output.time_taken(start_time)      
 
 if __name__ == "__main__":
     try:

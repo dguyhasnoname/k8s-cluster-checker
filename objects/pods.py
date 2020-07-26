@@ -18,26 +18,19 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     args=parser.parse_args()
 
-# class K8sPods:
-#     def get_pods(ns):
-#         try:
-#             if ns == 'all':          
-#                 pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
-#             else:
-#                 namespace = ns
-#                 pods = core.list_namespaced_pod(namespace, timeout_seconds=10)
-#             return pods
-#         except ApiException as e:
-#             print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)
-
 class _Pods:
-    global k8s_object, k8s_object_list, verbose
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'   
+        k8s_object_list = K8sPods.get_pods(ns) 
+    global k8s_object
+    k8s_object = 'pods'
     # with alive_bar(100, bar = 'bubbles') as bar:
     #     for i in range(100):
     #         k8s_object_list = get_pods()
     #         bar()
-    k8s_object_list = K8sPods.get_pods('all')
-    k8s_object = 'pods'
 
     def get_namespaced_pod_list(v):
         data = []
@@ -79,35 +72,37 @@ class _Pods:
         data = k8s.Check.image_pull_policy(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
-    def call_all(v):
-        #_Pods.get_namespaced_pod_list(v)
-        _Pods.check_pod_security(v)
-        _Pods.check_pod_health_probes(v)
-        _Pods.check_pod_resources(v)
-        _Pods.check_pod_qos(v)
-        _Pods.check_image_pullpolicy(v)
-        _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
+def call_all(v,ns):
+    _Pods(ns)
+    _Pods.check_pod_security(v)
+    _Pods.check_pod_health_probes(v)
+    _Pods.check_pod_resources(v)
+    _Pods.check_pod_qos(v)
+    _Pods.check_image_pullpolicy(v)
+    _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            _Pods.call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
-        # print help information and exit:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            _Pods.call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":

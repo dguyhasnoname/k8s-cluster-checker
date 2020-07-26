@@ -50,9 +50,16 @@ class ClusterRoleBinding:
         if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class NsRole:
-    global ns_role_list, namespace
-    ns_role_list = K8sNameSpaceRole.list_namespaced_role('all')
+    def __init__(self,ns):
+        global ns_role_list
+        self.ns = ns
+        if not ns:
+            ns = 'all' 
+        ns_role_list = K8sNameSpaceRole.list_namespaced_role(ns)
+ 
+    global k8s_object
     k8s_object = 'roles'
+
     def get_ns_role(v):    
         data = []
         headers = ['ROLE', 'NAMESPACE', 'RULES', 'API_GROUPS', 'RESOURCES', 'VERBS']
@@ -63,16 +70,20 @@ class NsRole:
                 len(item.rules), rules[0], rules[1], rules[2]])
             else:
                 data.append([item.metadata.name, item.metadata.namespace, "-", "-", "-", "-"])
-        k8s.Rbac.analyse_role(data,NsRole.k8s_object)
+        k8s.Rbac.analyse_role(data,k8s_object)
         data.append(['----------', '---', '---', '---', '---', '---'])
         data.append(["Total: " + str(len(ns_role_list.items)), "-", "-", "-",  "-", "-"])          
         k8s.Output.print_table(data,headers,v)
         k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
-
 class NsRoleBinding:
-    global ns_role_binding_list, namespace
-    ns_role_binding_list = K8sNameSpaceRoleBinding.list_namespaced_role_binding('all')
+    def __init__(self,ns):
+        global ns_role_binding_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'
+        ns_role_binding_list = K8sNameSpaceRoleBinding.list_namespaced_role_binding(ns)
+    
     def get_ns_role_binding(v):      
         data = []
         headers = ['ROLE_BINDING', 'NAMESPACE', 'ROLE', 'GROUP_BINDING']
@@ -95,10 +106,14 @@ class NsRoleBinding:
         if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 
-def call_all(v):
-    ClusterRole.get_cluster_role(v)
-    ClusterRoleBinding.get_cluster_role_binding(v)
+def call_all(v,ns):
+    if not ns:
+        ClusterRole.get_cluster_role(v)
+        ClusterRoleBinding.get_cluster_role_binding(v)
+
+    NsRole(ns)
     NsRole.get_ns_role(v)
+    NsRoleBinding(ns)
     NsRoleBinding.get_ns_role_binding(v)
     
     headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', 'ROLE_BINDING']
@@ -107,23 +122,26 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":

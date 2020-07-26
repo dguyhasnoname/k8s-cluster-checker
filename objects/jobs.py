@@ -4,8 +4,13 @@ start_time = time.time()
 from modules.get_jobs import K8sJobs
 
 class Jobs:
-    global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sJobs.get_jobs('all')
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'    
+        k8s_object_list = K8sJobs.get_jobs(ns)
+    global k8s_object
     k8s_object = 'jobs'
 
     def list_jobs(v):
@@ -38,7 +43,8 @@ class Jobs:
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
-def call_all(v):
+def call_all(v,ns):
+    Jobs(ns)
     Jobs.list_jobs(v)
     Jobs.check_jobs_pod_security(v)
     Jobs.check_jobs_pod_health_probes(v)
@@ -47,23 +53,26 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
-        return  
-  
+        return
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
