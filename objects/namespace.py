@@ -1,5 +1,6 @@
 from modules import message
 import sys, time, os, getopt, argparse
+from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 import objects as k8s
 from modules.get_pods import K8sPods
@@ -27,9 +28,11 @@ class Namespace:
         k8s_object_list = fun
         if len(k8s_object_list.items):
             if not 'services' in k8s_object:
-                k8s.Check.security_context(k8s_object, k8s_object_list)
-                k8s.Check.health_probes(k8s_object, k8s_object_list)
-                k8s.Check.resources(k8s_object, k8s_object_list)
+                with ThreadPoolExecutor(max_workers=3) as executor:
+                    executor.submit(k8s.Check.security_context, k8s_object, k8s_object_list)
+                    executor.submit(k8s.Check.health_probes, k8s_object, k8s_object_list)
+                    executor.submit(k8s.Check.resources, k8s_object, k8s_object_list)
+
                 if k8s_object in ['deployments','statefulsets']: k8s.Check.replica(k8s_object, k8s_object_list)
             else:
                 k8s.Service.check_service(k8s_object, k8s_object_list)
@@ -43,15 +46,25 @@ class Namespace:
             ns_list = all_ns_list
         else:
             ns_list = ns
-        deployments = K8sDeploy.get_deployments(ns)
-        ds = K8sDaemonSet.get_damemonsets(ns)
-        sts = K8sStatefulSet.get_sts(ns)
-        pods = K8sPods.get_pods(ns)
-        svc = K8sService.get_svc(ns)
-        ingress = K8sIngress.get_ingress(ns)
-        jobs = K8sJobs.get_jobs(ns)
 
-        print ("\n{} Namespace details:".format(ns))
+        with ThreadPoolExecutor(max_workers=7) as executor:
+            temp_deploy = executor.submit(K8sDeploy.get_deployments, ns)
+            temp_ds = executor.submit(K8sDaemonSet.get_damemonsets, ns)
+            temp_sts = executor.submit(K8sStatefulSet.get_sts, ns)
+            temp_pods = executor.submit(K8sPods.get_pods, ns)
+            temp_svc = executor.submit(K8sService.get_svc, ns)
+            temp_ingress = executor.submit(K8sIngress.get_ingress, ns)
+            temp_jobs = executor.submit(K8sJobs.get_jobs, ns)
+
+        deployments = temp_deploy.result()
+        ds = temp_ds.result()
+        sts = temp_sts.result()
+        pods = temp_pods.result()
+        svc = temp_svc.result()
+        ingress = temp_ingress.result()
+        jobs = temp_jobs.result()
+
+        print ("\n{} namespace details:".format(ns))
         data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs)
 
         total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
@@ -80,11 +93,12 @@ class Namespace:
 
         def get_all_object_data(ns):
             print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
-            Namespace.get_object_data(K8sDeploy.get_deployments(ns),'deployments')
-            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns),'damemonsets')
-            Namespace.get_object_data(K8sStatefulSet.get_sts(ns),'statefulsets')
-            Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
-            Namespace.get_object_data(K8sService.get_svc(ns),'services')
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                executor.submit(Namespace.get_object_data, K8sDeploy.get_deployments(ns), 'deployments')
+                executor.submit(Namespace.get_object_data, K8sDaemonSet.get_damemonsets(ns),'damemonsets')
+                executor.submit(Namespace.get_object_data, K8sStatefulSet.get_sts(ns),'statefulsets')
+                executor.submit(Namespace.get_object_data, K8sJobs.get_jobs(ns),'jobs')
+                executor.submit(Namespace.get_object_data, K8sService.get_svc(ns),'services')
 
         if v:
             if type(ns_list) != str:
@@ -102,13 +116,13 @@ class Namespace:
         
 def call_all(v,ns):
     Namespace.get_ns_data(v,ns)
-    
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:

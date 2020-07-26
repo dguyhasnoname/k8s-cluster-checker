@@ -3,3 +3,4 @@ argparse
 columnar
 click
 requests
+futures
