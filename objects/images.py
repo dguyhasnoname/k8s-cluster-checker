@@ -1,4 +1,4 @@
-import sys, time, os, re
+import sys, time, os, re, getopt
 import requests
 import objects as k8s
 from modules.get_deploy import K8sDeploy
@@ -6,8 +6,12 @@ from modules.get_deploy import K8sDeploy
 start_time = time.time()
 
 class Images:
-    global k8s_object, k8s_object_list
-    k8s_object_list = K8sDeploy.get_deployments("all")
+    def __init__(self,ns):
+        global k8s_object_list
+        self.ns = ns
+        if not ns:
+            ns = 'all'
+        k8s_object_list = K8sDeploy.get_deployments(ns)
 
     def get_images():
         data = []
@@ -26,17 +30,21 @@ class Images:
         repo = []
         data = Images.get_images()
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', \
-        'IMAGE:TAG', 'LATEST_TAG_AVAILABLE'] 
+        'IMAGE:TAG', 'LATEST_TAG_AVAILABLE']
+        print ("\n[INFO] Checking for latest image tags...")
         result = []
         for image in data:
             image_repo_name = image[3].rsplit(':', 1)[0]
             if not any(x in image_repo_name for x in ['gcr','quay','docker.io']):
                 repo_image_url = "https://hub.docker.com/v2/repositories/{}/tags".format(image_repo_name)
-                results = requests.get(repo_image_url).json()['results']
+                try:
+                    results = requests.get(repo_image_url).json()['results']
+                except:
+                    pass
                 
                 for repo in results:
                     if not any(x in repo for x in ['dev','latest','beta','rc']):
-                        repo['name'] = repo['name'].rsplit('-', 1)[0]
+                        repo_name = repo['name'].rsplit('-', 1)[0]
                         break
             # not feasible for google docker registry as oauth token is needed
             # elif 'gcr' in image_repo_name:
@@ -44,8 +52,8 @@ class Images:
             #     results = requests.get(repo_image_url).json()
             #     print (results)
             else:
-                repo['name'] = u'\u2717'
-            result.append([image[0], image[1], image[2], image[4], image[3], repo['name']])
+                repo_name = u'\u2717'
+            result.append([image[0], image[1], image[2], image[4], image[3], repo_name])
         k8s.Output.print_table(result,headers,True)
 
     def image_recommendation():
@@ -66,11 +74,42 @@ class Images:
         k8s.Output.bar(config_not_defined, data, 'has not defined recommended image pull-policy', \
         'deployments', '"Always"')
 
-def main():
+def call_all(v,ns):
+    Images(ns)
     # Images.list_images()
     Images.image_recommendation()
-    Images.get_last_updated_tag()
-    k8s.Output.time_taken(start_time)
+    if v: Images.get_last_updated_tag()
+
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        if not opts:        
+            call_all("","")
+            sys.exit()
+            
+    except getopt.GetoptError as err:
+        print(err)
+        return
+    verbose, ns = '', ''
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+        elif o in ("-v", "--verbose"):
+            verbose = True
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
+        else:
+            assert False, "unhandled option"
+    call_all(verbose,ns)
+    k8s.Output.time_taken(start_time) 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
