@@ -9,19 +9,19 @@ import rbac as rbac
 
 class Cluster:
     def get_node_data(v):
-        print ("\n\nNode details:")
+        print ("\nNode details:")
         node._Nodes.get_nodes_details(v)
     
     def get_namespaced_data(v):
-        ns.Namespace.get_ns_data(v)
+        ns.Namespace.get_ns_data(v,'')
 
     def get_ctrl_plane_data(v):
-        print ("\n\nControl plane details:")
+        print ("\nControl plane details:")
         cp.CtrlPlane.get_ctrl_plane_pods()
         cp.CtrlPlane.check_ctrl_plane_pods_properties(v)
     
     def get_rbac_details(v):
-        print ("\n\nRBAC details:")
+        print ("\nRBAC details:")
         rbac.call_all(v)
 
 def call_all(v):

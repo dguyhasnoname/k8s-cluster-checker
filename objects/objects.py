@@ -24,6 +24,7 @@ class Output:
         columns, rows = os.get_terminal_size(0)
         for i in range(columns):
             print (color + char, end="" + Output.RESET )
+        print ("\n")
    
     def print_table(data,headers,verbose):
         if verbose and len(data) != 0:
@@ -328,6 +329,24 @@ class CtrlProp:
             if c in '--profiling':
                 print (Output.RED + "[ALERT] " + Output.RESET + "Disable profiling for reduced attack surface.\n")
 
+class Service:
+    def check_service(k8s_object, k8s_object_list):
+        data, cluster_ip_svc, lb_svc, others_svc = [], [], [], []
+        for item in k8s_object_list.items:
+            if 'ClusterIP' in item.spec.type:
+                cluster_ip_svc.append([item.metadata.namespace, item.metadata.name])
+            elif 'LoadBalancer' in item.spec.type:
+                lb_svc.append([item.metadata.namespace, item.metadata.name])
+            else:
+                others_svc.append([item.metadata.namespace, item.metadata.name])
+        print ("\n{}: {} {}".format('service type: ', len(k8s_object_list.items), k8s_object))                
+        Output.bar(cluster_ip_svc, k8s_object_list.items, 'out of ' + \
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'ClusterIP')
+        Output.bar(lb_svc, k8s_object_list.items, 'out of ' + \
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'LoadBalancer')
+        Output.bar(others_svc, k8s_object_list.items, 'out of ' + \
+        str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'others')        
+
 class Rbac:
     def get_rules(rules):
         data, api_groups, resources, verbs, rules_count = [], "", "", "", 0
@@ -348,7 +367,7 @@ class Rbac:
         for i in data:
             if '*' in i[4]: full_perm.append([i[0]])
             if 'delete' in i[4]: delete_perm.append([i[0]])
-        print ("\n\n{}: {}".format(k8s_object, len(data)))
+        print ("\n{}: {}".format(k8s_object, len(data)))
         Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs')
         Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs')         
 

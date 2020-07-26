@@ -10,6 +10,7 @@ from modules.get_sts import K8sStatefulSet
 from modules.get_ns import K8sNameSpace
 from modules.get_ingress import K8sIngress
 from modules.get_jobs import K8sJobs
+from modules.get_svc import K8sService
 
 class Namespace:
     global all_ns_list
@@ -25,10 +26,13 @@ class Namespace:
     def get_object_data(fun,k8s_object):
         k8s_object_list = fun
         if len(k8s_object_list.items):
-            k8s.Check.security_context(k8s_object, k8s_object_list)
-            k8s.Check.health_probes(k8s_object, k8s_object_list)
-            k8s.Check.resources(k8s_object, k8s_object_list)
-            if not k8s_object in ['damemonsets','jobs']: k8s.Check.replica(k8s_object, k8s_object_list)
+            if not 'services' in k8s_object:
+                k8s.Check.security_context(k8s_object, k8s_object_list)
+                k8s.Check.health_probes(k8s_object, k8s_object_list)
+                k8s.Check.resources(k8s_object, k8s_object_list)
+                if k8s_object in ['deployments','statefulsets']: k8s.Check.replica(k8s_object, k8s_object_list)
+            else:
+                k8s.Service.check_service(k8s_object, k8s_object_list)
         else:
             print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
 
@@ -47,7 +51,7 @@ class Namespace:
         ingress = K8sIngress.get_ingress(ns)
         jobs = K8sJobs.get_jobs(ns)
 
-        print ("\n\n{} Namespace details:".format(ns))
+        print ("\n{} Namespace details:".format(ns))
         data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs)
 
         total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
@@ -75,11 +79,12 @@ class Namespace:
         k8s.Output.print_table(data,headers,True)
 
         def get_all_object_data(ns):
-            print (k8s.Output.BOLD + "\n\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
+            print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
             Namespace.get_object_data(K8sDeploy.get_deployments(ns),'deployments')
             Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns),'damemonsets')
             Namespace.get_object_data(K8sStatefulSet.get_sts(ns),'statefulsets')
             Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
+            Namespace.get_object_data(K8sService.get_svc(ns),'services')
 
         if v:
             if type(ns_list) != str:
@@ -90,7 +95,7 @@ class Namespace:
                 get_all_object_data(ns)
 
             if len(empty_ns) > 0:
-                print (k8s.Output.YELLOW + "\n\n[WARNING] " + k8s.Output.RESET + \
+                print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
                 "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
                 k8s.Output.print_table(empty_ns,headers,True)
         return data

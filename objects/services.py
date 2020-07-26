@@ -27,21 +27,8 @@ class _Service:
         k8s.Output.print_table(data,headers,True)
 
     def analyse_service(v):
-        data, cluster_ip_svc, lb_svc, others_svc = [], [], [], []
         if v:
-            for item in k8s_object_list.items:
-                if 'ClusterIP' in item.spec.type:
-                    cluster_ip_svc.append([item.metadata.namespace, item.metadata.name])
-                elif 'LoadBalancer' in item.spec.type:
-                    lb_svc.append([item.metadata.namespace, item.metadata.name])
-                else:
-                    others_svc.append([item.metadata.namespace, item.metadata.name])
-            k8s.Output.bar(cluster_ip_svc, k8s_object_list.items, 'out of ' + \
-            str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'ClusterIP')
-            k8s.Output.bar(lb_svc, k8s_object_list.items, 'out of ' + \
-            str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'LoadBalancer')
-            k8s.Output.bar(others_svc, k8s_object_list.items, 'out of ' + \
-            str(len(k8s_object_list.items)) + ' services are of type', k8s_object, 'others')
+            k8s.Service.check_service(k8s_object, k8s_object_list)
 
 def call_all(v):
     _Service.list_service(v)
