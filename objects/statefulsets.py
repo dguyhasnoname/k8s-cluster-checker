@@ -6,27 +6,27 @@ start_time = time.time()
 
 class _Sts:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sStatefulSet.get_sts('kube-system')
+    k8s_object_list = K8sStatefulSet.get_sts('all')
     k8s_object = 'statefulsets'
 
     def check_sts_security(v):
-        headers = ['STATEFULSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
+        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
         data = k8s.Check.security_context(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
     def check_sts_health_probes(v):
-        headers = ['STATEFULSET', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
         data = k8s.Check.health_probes(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
     def check_sts_resources(v):
-        headers = ['STATEFULSET', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
+        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
         data = k8s.Check.resources(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
     def check_sts_tolerations_affinity_node_selector_priority(v):  
-        headers = ['STATEFULSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
+        headers = ['NAMESPACE', 'STATEFULSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 

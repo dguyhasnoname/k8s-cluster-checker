@@ -7,11 +7,12 @@ apps = client.AppsV1Api()
 class K8sDaemonSet:
     def get_damemonsets(ns):           
         try:
-            print ("\n[INFO] Fetching dameonsets data...")
             if ns != 'all': 
+                print ("\n[INFO] Fetching {} namespace dameonsets data...".format(ns))
                 namespace = ns
                 damemonsets = apps.list_namespaced_daemon_set(namespace, timeout_seconds=10)
-            else:             
+            else:           
+                print ("\n[INFO] Fetching all namespace dameonsets data...")  
                 damemonsets = apps.list_daemon_set_for_all_namespaces(timeout_seconds=10)
             return damemonsets
         except ApiException as e:

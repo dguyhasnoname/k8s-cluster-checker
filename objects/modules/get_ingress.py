@@ -7,11 +7,12 @@ networking = client.NetworkingV1beta1Api()
 class K8sIngress:
     def get_ingress(ns):           
         try:
-            print ("\n[INFO] Fetching ingress data...")
-            if ns != 'all': 
+            if ns != 'all':
+                print ("\n[INFO] Fetching {} namespace ingress data...".format(ns)) 
                 namespace = ns
                 ingress = networking.list_namespaced_ingress(namespace, timeout_seconds=10)
-            else:             
+            else:
+                print ("\n[INFO] Fetching all namespace ingress data...") 
                 ingress = networking.list_ingress_for_all_namespaces(timeout_seconds=10)
             return ingress
         except ApiException as e:

@@ -32,19 +32,23 @@ class Namespace:
         else:
             print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
 
-    def get_ns_data(v):
+    def get_ns_data(v,ns):
         data, sum_list, empty_ns = [], [], []
-        all_deployments = K8sDeploy.get_deployments('all')
-        all_ds = K8sDaemonSet.get_damemonsets('all')
-        all_sts = K8sStatefulSet.get_sts('all')
-        all_pods = K8sPods.get_pods('all')
-        all_svc = K8sService.get_svc('all')
-        all_ingress = K8sIngress.get_ingress('all')
-        all_jobs = K8sJobs.get_jobs('all')
+        if not ns:
+            ns = 'all'
+            ns_list = all_ns_list
+        else:
+            ns_list = ns
+        deployments = K8sDeploy.get_deployments(ns)
+        ds = K8sDaemonSet.get_damemonsets(ns)
+        sts = K8sStatefulSet.get_sts(ns)
+        pods = K8sPods.get_pods(ns)
+        svc = K8sService.get_svc(ns)
+        ingress = K8sIngress.get_ingress(ns)
+        jobs = K8sJobs.get_jobs(ns)
 
-        print ("\n\nNamespace details:")
-        data = k8s.NameSpace.get_ns_details(all_ns_list,all_deployments,all_ds,\
-        all_sts,all_pods,all_svc,all_ingress,all_jobs)
+        print ("\n\n{} Namespace details:".format(ns))
+        data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs)
 
         total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
         total_ing , total_jobs = 0, 0, 0, 0, 0, 0, 0, 0
@@ -62,49 +66,61 @@ class Namespace:
             not i[0] in ['default', 'kube-node-lease', 'kube-public', 'local']:
                 empty_ns.append([i[0]])
 
-        data.append(['----------', '---', '---', '---', '---','---', '---', '---'])
-        data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
-        total_pods, total_svc, total_ing, total_jobs])
+        if type(ns_list) != str:
+            data.append(['----------', '---', '---', '---', '---','---', '---', '---'])
+            data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
+            total_pods, total_svc, total_ing, total_jobs])
                     
         headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS'] 
         k8s.Output.print_table(data,headers,True)
 
+        def get_all_object_data(ns):
+            print (k8s.Output.BOLD + "\n\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
+            Namespace.get_object_data(K8sDeploy.get_deployments(ns),'deployments')
+            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns),'damemonsets')
+            Namespace.get_object_data(K8sStatefulSet.get_sts(ns),'statefulsets')
+            Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
+
         if v:
-            for item in all_ns_list.items:
-                ns = item.metadata.name  
-                print (k8s.Output.BOLD + "\n\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
-                Namespace.get_object_data(K8sDeploy.get_deployments(ns),'deployments')
-                Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns),'damemonsets')
-                Namespace.get_object_data(K8sStatefulSet.get_sts(ns),'statefulsets')
-                Namespace.get_object_data(K8sJobs.get_jobs(ns),'jobs')
+            if type(ns_list) != str:
+                for item in ns_list.items:
+                    ns = item.metadata.name  
+                    get_all_object_data(ns)
+            else:
+                get_all_object_data(ns)
 
             if len(empty_ns) > 0:
-                print (k8s.Output.YELLOW + "\n\n[WARNING] " + k8s.Output.RESET + "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
+                print (k8s.Output.YELLOW + "\n\n[WARNING] " + k8s.Output.RESET + \
+                "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
                 k8s.Output.print_table(empty_ns,headers,True)
         return data
         
-def call_all(v):
-    Namespace.get_ns_data(v)
+def call_all(v,ns):
+    Namespace.get_ns_data(v,ns)
+    
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
-            call_all("")
+            call_all("","")
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-
+    verbose, ns = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-n", "--namespace"):
+            if not verbose: verbose = False
+            ns = a          
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,ns)
     k8s.Output.time_taken(start_time)  
 
 if __name__ == "__main__":

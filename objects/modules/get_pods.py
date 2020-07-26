@@ -7,10 +7,11 @@ core = client.CoreV1Api()
 class K8sPods:    
     def get_pods(ns):
         try:
-            print ("\n[INFO] Fetching pods data...")
-            if ns == 'all':          
+            if ns == 'all':
+                print ("\n[INFO] Fetching all namespace pods data...")         
                 pods = core.list_pod_for_all_namespaces(timeout_seconds=10)
             else:
+                print ("\n[INFO] Fetching {} namespace pods data...".format(ns))  
                 namespace = ns
                 pods = core.list_namespaced_pod(namespace, timeout_seconds=10)
             return pods

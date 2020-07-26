@@ -20,7 +20,7 @@ Before running script export KUBECONFIG file as env:
 
 class _Deployment:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDeploy.get_deployments("kube-system")
+    k8s_object_list = K8sDeploy.get_deployments('all')
     k8s_object = 'deployment'
 
     def get_namespaced_deployment_list(v):

@@ -19,7 +19,7 @@ Before running script export KUBECONFIG file as env:
 
 class _Daemonset:
     global k8s_object, k8s_object_list, namespace
-    k8s_object_list = K8sDaemonSet.get_damemonsets('kube-system')
+    k8s_object_list = K8sDaemonSet.get_damemonsets('all')
     k8s_object = 'daemonset'
 
     def check_damemonset_security(v):

@@ -7,11 +7,12 @@ batch = client.BatchV1Api()
 class K8sJobs:
     def get_jobs(ns):
         try:
-            print ("\n[INFO] Fetching jobs data...")
-            if ns != 'all': 
+            if ns != 'all':
+                print ("\n[INFO] Fetching {} namespace jobs data...".format(ns))  
                 namespace = ns
                 jobs = batch.list_namespaced_job(namespace, timeout_seconds=10)
-            else:             
+            else:
+                print ("\n[INFO] Fetching all namespace jobs data...")   
                 jobs = batch.list_job_for_all_namespaces(timeout_seconds=10)
             return jobs
         except ApiException as e:

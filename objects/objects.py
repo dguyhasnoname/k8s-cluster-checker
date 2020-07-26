@@ -58,7 +58,7 @@ class Check:
         config = 'security context'
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
-            if k8s_object is 'pods':
+            if 'pods' in k8s_object:
                 containers = item.spec.containers
             else:
                 containers = item.spec.template.spec.containers            
@@ -128,7 +128,7 @@ class Check:
         config = 'resource limits/requests'      
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
-            if k8s_object is 'pods':
+            if 'pods' in k8s_object:
                 containers = item.spec.containers
             else:
                 containers = item.spec.template.spec.containers
@@ -180,7 +180,7 @@ class Check:
         affinity, node_selector, toleration = "", "", "" 
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
-            if k8s_object is 'pods':
+            if 'pods' in k8s_object:
                 tolerations = item.spec.tolerations
                 node_selectors = item.spec.node_selector
                 affinitys = item.spec.affinity
@@ -234,7 +234,7 @@ class Check:
         data, if_not_present, always, never= [], [], [], []
         config = 'image pull-policy'
         for item in k8s_object_list.items:
-            if k8s_object is 'pods':
+            if 'pods' in k8s_object:
                 containers = item.spec.containers
             else:
                 containers = item.spec.template.spec.containers            
@@ -353,32 +353,41 @@ class Rbac:
         Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs')         
 
 class NameSpace:
-    def get_ns_details(all_ns_list,all_deployments,all_ds,all_sts,all_pods,all_svc,all_ingress,all_jobs):
-        data = []
-        for item in all_ns_list.items:
-            ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, ns_jobs = [], [], [], [], [], [], []
-            ns = item.metadata.name        
-            for item in all_deployments.items:
-                if item.metadata.namespace in ns:
-                    ns_deployments.append([item.metadata.namespace, item.metadata.name])
-            for item in all_ds.items:
-                if item.metadata.namespace == ns:
-                    ns_ds.append([item.metadata.namespace, item.metadata.name])
-            for item in all_sts.items:
-                if item.metadata.namespace == ns:
-                    ns_sts.append([item.metadata.namespace, item.metadata.name])
-            for item in all_pods.items:
-                if item.metadata.namespace == ns:
-                    ns_pods.append([item.metadata.namespace, item.metadata.name])
-            for item in all_svc.items:
-                if item.metadata.namespace == ns:
-                    ns_svc.append([item.metadata.namespace, item.metadata.name])            
-            for item in all_ingress.items:
-                if item.metadata.namespace == ns:
-                    ns_ing.append([item.metadata.namespace, item.metadata.name])
-            for item in all_jobs.items:
-                if item.metadata.namespace == ns:
-                    ns_jobs.append([item.metadata.namespace, item.metadata.name])                                                           
-            data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), \
-            len(ns_pods), len(ns_svc), len(ns_ing), len(ns_jobs)])
+    def get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data):
+        ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, ns_jobs = [], [], [], [], [], [], []
+        for item in deployments.items:
+            if item.metadata.namespace == ns:
+                ns_deployments.append([item.metadata.namespace, item.metadata.name])
+        for item in ds.items:
+            if item.metadata.namespace == ns:
+                ns_ds.append([item.metadata.namespace, item.metadata.name])
+        for item in sts.items:
+            if item.metadata.namespace == ns:
+                ns_sts.append([item.metadata.namespace, item.metadata.name])
+        for item in pods.items:
+            if item.metadata.namespace == ns:
+                ns_pods.append([item.metadata.namespace, item.metadata.name])
+        for item in svc.items:
+            if item.metadata.namespace == ns:
+                ns_svc.append([item.metadata.namespace, item.metadata.name])            
+        for item in ingress.items:
+            if item.metadata.namespace == ns:
+                ns_ing.append([item.metadata.namespace, item.metadata.name])
+        for item in jobs.items:
+            if item.metadata.namespace == ns:
+                ns_jobs.append([item.metadata.namespace, item.metadata.name])
+        ns_data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), \
+        len(ns_pods), len(ns_svc), len(ns_ing), len(ns_jobs)])
+
+        return ns_data       
+
+    def get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs):
+        ns_data = []
+        if type(ns_list) != str:
+            for item in ns_list.items:
+                ns = item.metadata.name     
+                data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data)
+        else:
+            ns = ns_list
+            data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data)
         return data
