@@ -9,11 +9,12 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
 5. workload running with single replica
 6. rbac details
 7. k8s objects in a namespace
+8. docker, kubernetes and OS version(flatcar OS only) are latest or not.
 
 #### k8s-cluster-checker contains below scripts:
 
 1. [cluster.py](objects/cluster.py): gives quick details of cluster and analyses configurations
-2. [nodes.py](objects/nodes.py): gives details of nodes
+2. [nodes.py](objects/nodes.py): gives details of nodes. Finds if docker, kubernetes and docker version are latest or not.
 3. [namespace.py](objects/namespace.py): give details of namespace objects and analyses them
     - `python namespace.py -n kube-system -v`
     - if `-n` namespace is not given, it will return data for all namespaces
@@ -37,6 +38,8 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
     - columnar
     - click
     - requests
+    - futures
+    - packaging
 2. `pip3` needs to be installed to get above packages. `pip` is already installed if you are using Python 2 >=2.7.9 or Python 3 >=3.4. You need to install above packages with command: 
 
     ```
@@ -69,7 +72,7 @@ Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/
 
     docker pull dguyhasnoname/k8s-cluster-checker:latest
 
-Once your image is ready, run the docker container and export KUBECONFIG inside the container. You can get he kubeconfig inside the container by mapping dir inside the container from your local machine where you KUEBCONFIG file is stored:
+Once your image is ready, run the docker container and export KUBECONFIG inside the container. You can get the kubeconfig inside the container by mapping dir inside the container from your local machine where your KUEBCONFIG file is stored:
 
     
     docker run -it -v /dguyhasnoname/k8sconfig:/k8sconfig dguyhasnoname/k8s-cluster-checker:latest

@@ -45,7 +45,7 @@ class _Nodes:
          'etcd:    ' + str(etcd) + "\n" + "others:  " + str(others)
         data.append(['----------', '-----', '-----', '-----', '-----', '-----', '-----', '-----'])
         data.append([total_nodes, item.status.node_info.kubelet_version, \
-        "-", total_cpu, f'{round(total_mem, 2)}GB', "-", item.status.node_info.os_image, docker_version])          
+        "-", total_cpu, f'{round(total_mem, 2)}GB', "-", item.status.node_info.os_image, docker_version])         
         if v:
             k8s.Output.print_table(data,headers,v)
         else:
@@ -56,6 +56,9 @@ class _Nodes:
                 short_data.append(['total:  ' + str(masters+nodes+etcd+others), '', '', '', '', ''])
             headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION']
             k8s.Output.print_table(short_data,headers,True)
+            k8s.Nodes.get_latest_os_version(item.status.node_info.os_image) 
+            k8s.Nodes.get_latest_docker_version(docker_version)
+            k8s.Nodes.get_latest_k8s_version(item.status.node_info.kubelet_version)
 
 def call_all(v):
     _Nodes.get_nodes_details(v)

@@ -4,3 +4,4 @@ columnar
 click
 requests
 futures
+packaging

@@ -1,6 +1,7 @@
 from columnar import columnar
 from click import style
-import os, re, time
+from packaging import version
+import os, re, time, requests, json
 
 class Output:
     RED = '\033[31m'
@@ -411,3 +412,27 @@ class NameSpace:
             ns = ns_list
             data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data)
         return data
+
+class Nodes:
+    def get_latest_k8s_version(kubelet_version):
+        ver = requests.get("https://storage.googleapis.com/kubernetes-release/release/stable.txt")
+        latest_k8s_version = ver.text
+        if version.parse(str(kubelet_version)) < version.parse(str(latest_k8s_version)):
+            print(Output.YELLOW + "[WARNING] " + Output.RESET + "Cluster is not running with latest kubernetes version: {}".format(latest_k8s_version))        
+
+    def get_latest_os_version(os):
+        if 'Flatcar' in os:
+            ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
+            latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
+            current_os_version = os.split()[5]
+
+            if version.parse(str(current_os_version)) < version.parse(str(latest_os_version[0][1])):
+                print(Output.YELLOW + "[WARNING] " + Output.RESET + "Cluster nodes are not running on latest {}{}".format(latest_os_version[0][0],latest_os_version[0][1]))
+            return [ latest_os_version, current_os_version ]
+        
+    def get_latest_docker_version(docker_version):
+        
+        ver = requests.get("https://api.github.com/repositories/7691631/releases/latest")
+        latest_docker_version = ver.json()['tag_name']
+        if version.parse(str(docker_version)) < version.parse(str(latest_docker_version)):
+            print(Output.YELLOW + "[WARNING] " + Output.RESET + "Cluster nodes are not running on latest docker version: {}".format(latest_docker_version))
