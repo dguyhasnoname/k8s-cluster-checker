@@ -14,8 +14,6 @@ class Cluster:
         node._Nodes.get_nodes_details(v)
     
     def get_namespaced_data(v):
-        #cluster_pods_list = K8sPods.get_pods('all')
-
         data = ns.Namespace.get_ns_data(False,'')
         cluster_pods_list, cluster_svc_list = data[1], data[2]
         k8s.Check.security_context('pods',cluster_pods_list)
@@ -24,7 +22,6 @@ class Cluster:
         k8s.Check.qos('pods',cluster_pods_list)
         k8s.Check.image_pull_policy('pods',cluster_pods_list)
         k8s.Service.check_service('services', cluster_svc_list)
-        
 
     def get_ctrl_plane_data(v):
         print ("\nControl plane details:")
@@ -44,7 +41,6 @@ def call_all(v):
     Cluster.get_namespaced_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_rbac_details(v)
-
 
 def main():
     try:
