@@ -28,10 +28,9 @@ class Namespace:
         k8s_object_list = fun
         if len(k8s_object_list.items):
             if not 'services' in k8s_object:
-                with ThreadPoolExecutor(max_workers=3) as executor:
-                    executor.submit(k8s.Check.security_context, k8s_object, k8s_object_list)
-                    executor.submit(k8s.Check.health_probes, k8s_object, k8s_object_list)
-                    executor.submit(k8s.Check.resources, k8s_object, k8s_object_list)
+                k8s.Check.security_context(k8s_object, k8s_object_list)
+                k8s.Check.health_probes(k8s_object, k8s_object_list)
+                k8s.Check.resources(k8s_object, k8s_object_list)
 
                 if k8s_object in ['deployments','statefulsets']: k8s.Check.replica(k8s_object, k8s_object_list)
             else:
@@ -95,9 +94,9 @@ class Namespace:
             print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
             with ThreadPoolExecutor(max_workers=5) as executor:
                 executor.submit(Namespace.get_object_data, K8sDeploy.get_deployments(ns), 'deployments')
-                executor.submit(Namespace.get_object_data, K8sDaemonSet.get_damemonsets(ns),'damemonsets')
-                executor.submit(Namespace.get_object_data, K8sStatefulSet.get_sts(ns),'statefulsets')
-                executor.submit(Namespace.get_object_data, K8sJobs.get_jobs(ns),'jobs')
+                executor.submit(Namespace.get_object_data, K8sDaemonSet.get_damemonsets(ns), 'damemonsets')
+                executor.submit(Namespace.get_object_data, K8sStatefulSet.get_sts(ns), 'statefulsets')
+                executor.submit(Namespace.get_object_data, K8sJobs.get_jobs(ns), 'jobs')
                 executor.submit(Namespace.get_object_data, K8sService.get_svc(ns),'services')
 
         if v:
