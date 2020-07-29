@@ -7,15 +7,19 @@ start_time = time.time()
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This script can be used to fetch details about pods deployed \
-in all namespaces ib k8s cluster.
+in namespaces in k8s cluster.
 
 Before running script export KUBECONFIG file as env:
-
-    export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
+    export KUBECONFIG=<kubeconfig file location>
+    
+    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
         epilog="""All's well that ends well.""")
     
-    parser.add_argument('-v', '--verbose', type=str, help="verbose mode. \
+    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
 Use this flag to get namespaced pod level config details.")
+    parser.add_argument('-n', '--namespace', help="namepsace selector. \
+Use this flag to get namespaced pod details. If this flag is not \
+used, all namespace details is returned")
     args=parser.parse_args()
 
 class _Pods:

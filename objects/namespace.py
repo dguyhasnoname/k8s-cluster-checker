@@ -1,4 +1,3 @@
-from modules import message
 import sys, time, os, getopt, argparse
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()

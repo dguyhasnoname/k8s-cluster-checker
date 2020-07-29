@@ -1,4 +1,3 @@
-from modules import message
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
