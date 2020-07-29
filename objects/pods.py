@@ -53,12 +53,12 @@ class _Pods:
         k8s.Output.print_table(data,headers,v)  
 
     def check_pod_resources(v):
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
+        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
         data = k8s.Check.resources(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
     def check_pod_qos(v):
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'QoS']
+        headers = ['NAMESPACE', 'POD', 'QoS']
         data = k8s.Check.qos(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
