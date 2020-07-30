@@ -2,18 +2,36 @@
 
 k8s-cluster-checker is bundle of python scripts which can be used to analyse below configurations in a kubernetes cluster:
 
-1. security-context defined
-2. health-probes defined
+1. security-context
+2. health-probes
 3. QoS of workloads
 4. types of services
 5. workload running with single replica
-6. rbac details
+6. rbac analysis
 7. k8s objects in a namespace
 8. docker, kubernetes and OS version(flatcar OS only) are latest or not.
+9. stale namespaces with no workloads
+
+This tool performs read-only operations on any k8s cluster. You can make a service account/kubeconfig with full read-only access to all k8s-objects and use the same to run the tool.
 
 #### k8s-cluster-checker contains below scripts:
 
-1. [cluster.py](objects/cluster.py): gives quick details of cluster and analyses configurations
+1. [cluster.py](objects/cluster.py): gives quick details of cluster and analyses configurations as below:
+    - cluster name
+    - node-details
+    - node-roles
+    - volumes used
+    - OS, K8s and docker version
+    - overall and namespaced workload count
+    - analysis od admision-controllers
+    - analysis of security configs for workloads
+    - analysis of health-check probes
+    - analysis of resource limits/requests of workloads and their QoS
+    - analysis of image-pull-policy
+    - RBAC analysis
+    - analysis of services in the cluster.
+
+    above analysis is the collective result of following scripts.
 2. [nodes.py](objects/nodes.py): gives details of nodes. Finds if docker, kubernetes and docker version are latest or not.
 3. [namespace.py](objects/namespace.py): give details of namespace objects and analyses them
     - `python namespace.py -n kube-system -v`
