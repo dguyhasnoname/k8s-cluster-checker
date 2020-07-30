@@ -384,8 +384,9 @@ class Rbac:
             Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs', Output.RED)         
 
 class NameSpace:
-    def get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data):
-        ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, ns_jobs = [], [], [], [], [], [], []
+    def get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings,ns,ns_data):
+        ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, \
+        ns_jobs, ns_roles, ns_role_bindings = [], [], [], [], [], [], [], [], []
         for item in deployments.items:
             if item.metadata.namespace == ns:
                 ns_deployments.append([item.metadata.namespace, item.metadata.name])
@@ -408,20 +409,26 @@ class NameSpace:
         for item in jobs.items:
             if item.metadata.namespace == ns:
                 ns_jobs.append([item.metadata.namespace, item.metadata.name])
+        for item in roles.items:
+            if item.metadata.namespace == ns:
+                ns_roles.append([item.metadata.namespace, item.metadata.name])
+        for item in role_bindings.items:
+            if item.metadata.namespace == ns:
+                ns_role_bindings.append([item.metadata.namespace, item.metadata.name])                   
         ns_data.append([ns, len(ns_deployments), len(ns_ds), len(ns_sts), \
-        len(ns_pods), len(ns_svc), len(ns_ing), len(ns_jobs)])
+        len(ns_pods), len(ns_svc), len(ns_ing), len(ns_jobs), len(ns_roles), len(ns_role_bindings)])
 
         return ns_data       
 
-    def get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs):
+    def get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings):
         ns_data = []
         if type(ns_list) != str:
             for item in ns_list.items:
                 ns = item.metadata.name     
-                data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data)
+                data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings,ns,ns_data)
         else:
             ns = ns_list
-            data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data)
+            data = NameSpace.get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings,ns,ns_data)
         return data
 
 class Nodes:
