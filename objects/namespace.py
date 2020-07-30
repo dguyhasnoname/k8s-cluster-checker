@@ -91,25 +91,26 @@ class Namespace:
 
         def get_all_object_data(ns):
             print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                executor.submit(Namespace.get_object_data, K8sDeploy.get_deployments(ns), 'deployments')
-                executor.submit(Namespace.get_object_data, K8sDaemonSet.get_damemonsets(ns), 'damemonsets')
-                executor.submit(Namespace.get_object_data, K8sStatefulSet.get_sts(ns), 'statefulsets')
-                executor.submit(Namespace.get_object_data, K8sJobs.get_jobs(ns), 'jobs')
-                executor.submit(Namespace.get_object_data, K8sService.get_svc(ns),'services')
+
+            Namespace.get_object_data(K8sDeploy.get_deployments(ns), 'deployments')
+            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), 'damemonsets')
+            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), 'statefulsets')
+            Namespace.get_object_data(K8sJobs.get_jobs(ns), 'jobs')
+            Namespace.get_object_data(K8sService.get_svc(ns),'services')
 
         if v:
             if type(ns_list) != str:
                 for item in ns_list.items:
-                    ns = item.metadata.name  
+                    ns = item.metadata.name
+                    k8s.Output.separator(k8s.Output.GREEN,'-')
                     get_all_object_data(ns)
             else:
                 get_all_object_data(ns)
 
-            if len(empty_ns) > 0:
-                print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
-                "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
-                k8s.Output.print_table(empty_ns,headers,True)
+        if len(empty_ns) > 0:
+            print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
+            "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
+            k8s.Output.print_table(empty_ns,headers,True)
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
         
 def call_all(v,ns):

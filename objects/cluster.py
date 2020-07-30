@@ -47,7 +47,6 @@ class Cluster:
 def call_all(v):
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_cluster_name()
-    k8s.Output.separator(k8s.Output.GREEN,'-')
     Cluster.get_node_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_ctrl_plane_data(v)

@@ -431,6 +431,7 @@ class Nodes:
             "Cluster is running with latest kubernetes version: {}".format(latest_k8s_version))       
 
     def get_latest_os_version(os):
+        latest_os_version, current_os_version = "", ""
         if 'Flatcar' in os:
             ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
             latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
@@ -442,7 +443,10 @@ class Nodes:
             else:
                 print(Output.GREEN + "[OK] " + Output.RESET + \
                 "Cluster nodes are running on latest {}{}".format(latest_os_version[0][0],latest_os_version[0][1]))
-            return [ latest_os_version, current_os_version ]
+        elif 'CoreOS' in os:
+            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
+                "Cluster nodes are running on CoreOS which is DPERECATED: https://coreos.com/os/eol/")
+        return [ latest_os_version, current_os_version ]
         
     def get_latest_docker_version(docker_version):
         
