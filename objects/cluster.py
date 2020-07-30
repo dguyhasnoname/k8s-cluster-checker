@@ -37,8 +37,7 @@ class Cluster:
 
     def get_ctrl_plane_data(v):
         print ("\nControl plane details:")
-        cp.CtrlPlane.get_ctrl_plane_pods()
-        cp.CtrlPlane.check_ctrl_plane_pods_properties(v)
+        cp.call_all(v)
     
     def get_rbac_details(v):
         print ("\nRBAC details:")
