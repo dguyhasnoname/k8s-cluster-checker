@@ -23,12 +23,19 @@ class CtrlPlane:
 
     def get_ctrl_plane_pods():
         data = []
-        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME']
+        headers = ['NAMESPACE', 'PODS', 'NODE_NAME', 'QoS']
         for item in k8s_object_list.items:
-            data.append([item.metadata.namespace, item.metadata.name])
-        data.append(['----------', '---'])
-        data.append(["Total pods: ", len(data) - 1])
+            data.append([item.metadata.namespace, item.metadata.name, \
+            item.spec.node_name])
+        data.append(['----------', '---', '---'])
+        data.append(["Total pods: ", len(data) - 1, ''])
         k8s.Output.print_table(data,headers,True)
+
+    def check_ctrl_plane_security(v):
+        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
+        'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
+        data = k8s.Check.security_context(k8s_object,k8s_object_list)
+        k8s.Output.print_table(data,headers,v)        
 
     def check_ctrl_plane_pods_health_probes(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
@@ -40,10 +47,16 @@ class CtrlPlane:
         data = k8s.Check.resources(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
+    # gets file name from check_ctrl_plane_pods_properties function
     def check_ctrl_plane_pods_properties_operation(item,filename,headers,v):
         commands = item.spec.containers[0].command
         data = k8s.CtrlProp.compare_properties(filename, commands)
         k8s.Output.print_table(data,headers,v)
+
+    def check_ctrl_plane_pods_qos(v):
+        headers = ['NAMESPACE', 'POD', 'QoS']
+        data = k8s.Check.qos(k8s_object,k8s_object_list)
+        k8s.Output.print_table(data,headers,v)        
 
     def check_ctrl_plane_pods_properties(v):
         container_name_check = ""
@@ -69,8 +82,10 @@ class CtrlPlane:
 
 def call_all(v):
     CtrlPlane.get_ctrl_plane_pods()
+    CtrlPlane.check_ctrl_plane_security(v)
     CtrlPlane.check_ctrl_plane_pods_health_probes(v)
     CtrlPlane.check_ctrl_plane_pods_resources(v)
+    CtrlPlane.check_ctrl_plane_pods_qos(v)
     CtrlPlane.check_ctrl_plane_pods_properties(v)
 
 def main():
