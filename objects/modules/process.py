@@ -283,6 +283,7 @@ class CtrlProp:
             admission_controllers_list = file.read()
         return admission_controllers_list
 
+    # read property file from conf dir, file name being passed from compare_properties function
     def read_object_file(filename):
         object_args = []
         with open(filename, "r") as file:
@@ -290,6 +291,7 @@ class CtrlProp:
                 object_args.append(line.split(None, 1)[0])
         return object_args
 
+    # gets file name from check_ctrl_plane_pods_properties_operation function in ctrl-plane.py
     def compare_properties(filename,commands):
         data, command_list = [], []
         object_args =  CtrlProp.read_object_file(filename)
@@ -297,6 +299,7 @@ class CtrlProp:
             command = c.rsplit("=")[0]
             command_list.append(command)
             data.append([c, u'\u2714'])
+        # compares the properties in conf file and commands args set in ctrl pods
         diff_list = list(set(object_args).difference(command_list))
         diff_list.sort()
         for i in diff_list:
@@ -308,19 +311,21 @@ class CtrlProp:
         important_admission_plugins = ['AlwaysPullImages', 'DenyEscalatingExec',  \
         'LimitRange', 'NodeRestriction', 'PodSecurityPolicy', 'ResourceQuota', 'SecurityContextDeny']
 
+        # checking which addmission controllers are enabled
         for c in commands:
             if 'enable-admission-plugins' in c:
                 admission_plugins_enabled = (c.rsplit("=")[1]).split(",")
                 print (Output.GREEN + "\nImportant Admission Controllers enabled: \n"+ \
-                Output.RESET + "{}\n".format(admission_plugins_enabled))
+                Output.RESET + "{}\n".format('\n'.join(admission_plugins_enabled)))
 
                 admission_plugins_list = CtrlProp.read_admission_controllers()
 
+                # checking difference in addmission controllers
                 admission_plugins_not_enabled = list(set(important_admission_plugins) - \
                 set(admission_plugins_enabled))
-
+                
                 print (Output.RED + "Important Admission Controllers not enabled: \n" + \
-                Output.RESET  + "{}\n".format(admission_plugins_not_enabled))
+                Output.RESET  + "{}\n".format('\n'.join(admission_plugins_not_enabled)))
 
                 if v: print (Output.YELLOW + "Admission Controllers available in k8s: \n" + \
                 Output.RESET + "[{}]\n".format(admission_plugins_list))
