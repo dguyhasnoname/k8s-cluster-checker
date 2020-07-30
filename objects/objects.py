@@ -217,6 +217,7 @@ class Check:
     def qos(k8s_object,k8s_object_list):
         data, guaranteed, besteffort, burstable = [], [], [], []
         config = 'QoS'
+        if not k8s_object_list: return
         for item in k8s_object_list.items:
             data.append([item.metadata.namespace, item.metadata.name, item.status.qos_class])
             if 'Guaranteed' in item.status.qos_class:
@@ -394,10 +395,11 @@ class NameSpace:
                 ns_pods.append([item.metadata.namespace, item.metadata.name])
         for item in svc.items:
             if item.metadata.namespace == ns:
-                ns_svc.append([item.metadata.namespace, item.metadata.name])            
-        for item in ingress.items:
-            if item.metadata.namespace == ns:
-                ns_ing.append([item.metadata.namespace, item.metadata.name])
+                ns_svc.append([item.metadata.namespace, item.metadata.name])
+        if ingress:      
+            for item in ingress.items:
+                if item.metadata.namespace == ns:
+                    ns_ing.append([item.metadata.namespace, item.metadata.name])
         for item in jobs.items:
             if item.metadata.namespace == ns:
                 ns_jobs.append([item.metadata.namespace, item.metadata.name])

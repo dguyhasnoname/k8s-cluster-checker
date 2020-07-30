@@ -12,6 +12,9 @@ class _Ingress:
         if not ns:
             ns = 'all' 
         k8s_object_list = K8sIngress.get_ingress(ns)
+        if not k8s_object_list: 
+            print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + "No ingress found!")
+            sys.exit()
  
     global k8s_object
     k8s_object = 'ingress'

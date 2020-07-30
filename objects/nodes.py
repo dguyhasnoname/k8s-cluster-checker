@@ -79,9 +79,9 @@ class _Nodes:
                 short_data = [[i[2], i[1], i[3], i[4], i[6], i[7], i[5]]]
                 short_data.append(['----------', '', '', '', '', '', ''])
                 short_data.append(['total:   ' + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
-            headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOL_IN_USE']
+            headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
             k8s.Output.print_table(short_data,headers,True)
-        k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+
         k8s.Nodes.get_latest_os_version(item.status.node_info.os_image)
         k8s.Nodes.get_latest_docker_version(docker_version)
         k8s.Nodes.get_latest_k8s_version(item.status.node_info.kubelet_version)

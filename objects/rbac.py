@@ -45,6 +45,7 @@ class ClusterRoleBinding:
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " + str(len(role_binding_list.items)), "-", "-", "-"])                 
         k8s.Output.print_table(data,headers,v)
+        
 
 class NsRole:
     def __init__(self,ns):
@@ -100,9 +101,7 @@ class NsRoleBinding:
         data.append(["Total: " + str(len(ns_role_binding_list.items)), "-", "-", "-"]) 
         k8s.Output.print_table(data,headers,v)
 
-
-def call_all(v,ns):
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+def call_all(v,ns):     
     if not ns:
         ClusterRole.get_cluster_role(v)
         ClusterRoleBinding.get_cluster_role_binding(v)
@@ -111,10 +110,9 @@ def call_all(v,ns):
     NsRole.get_ns_role(v)
     NsRoleBinding(ns)
     NsRoleBinding.get_ns_role_binding(v)
-    
     headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', 'ROLE_BINDING']
     k8s.Output.print_table([[len(role_list.items), len(role_binding_list.items), \
-    len(ns_role_list.items), len(ns_role_binding_list.items)]],headers,True)    
+    len(ns_role_list.items), len(ns_role_binding_list.items)]],headers,True)
 
 def main():
     try:
