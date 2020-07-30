@@ -51,7 +51,7 @@ class Output:
             print (color + "{}".format("".join(show_bar)) + Output.RESET + " {}% | {} {} {} {}.".format(percentage, \
             len(not_defined), k8s_object, message, config))
         else:
-            print (Output.GREEN + "All {} has {} defined.".format(k8s_object,config) + Output.RESET)       
+            print (Output.GREEN + "All {} has {} defined.".format(k8s_object,config) + Output.RESET)
 
 class Check:
     def security_context(k8s_object,k8s_object_list):
@@ -370,8 +370,12 @@ class Rbac:
             if '*' in i[4]: full_perm.append([i[0]])
             if 'delete' in i[4]: delete_perm.append([i[0]])
         print ("\n{}: {}".format(k8s_object, len(data)))
-        Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs', Output.RED)
-        Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs', Output.RED)         
+        if len(full_perm):
+            Output.bar(full_perm,data, 'are having full permission on selected', k8s_object, 'APIs', Output.RED)
+        else:
+            print (Output.GREEN + "[OK] " + Output.RESET + "No {} are having full permission ".format(k8s_object))
+        if len(delete_perm):     
+            Output.bar(delete_perm,data,'are having delete permission on designated', k8s_object, 'APIs', Output.RED)         
 
 class NameSpace:
     def get_ns_object_details(deployments,ds,sts,pods,svc,ingress,jobs,ns,ns_data):

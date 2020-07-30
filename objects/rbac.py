@@ -25,7 +25,6 @@ class ClusterRole:
         data.append(["Total: " + str(len(role_list.items)), rules[3], "-", "-", "-"])
   
         k8s.Output.print_table(data,headers,v)
-        k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class ClusterRoleBinding:
     global role_binding_list
@@ -46,7 +45,6 @@ class ClusterRoleBinding:
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " + str(len(role_binding_list.items)), "-", "-", "-"])                 
         k8s.Output.print_table(data,headers,v)
-        if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class NsRole:
     def __init__(self,ns):
@@ -73,7 +71,6 @@ class NsRole:
         data.append(['----------', '---', '---', '---', '---', '---'])
         data.append(["Total: " + str(len(ns_role_list.items)), "-", "-", "-",  "-", "-"])          
         k8s.Output.print_table(data,headers,v)
-        k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 class NsRoleBinding:
     def __init__(self,ns):
@@ -102,10 +99,10 @@ class NsRoleBinding:
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " + str(len(ns_role_binding_list.items)), "-", "-", "-"]) 
         k8s.Output.print_table(data,headers,v)
-        if v: k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
 
 
 def call_all(v,ns):
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     if not ns:
         ClusterRole.get_cluster_role(v)
         ClusterRoleBinding.get_cluster_role_binding(v)
