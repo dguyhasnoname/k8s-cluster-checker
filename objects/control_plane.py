@@ -1,7 +1,7 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import sys, time, os, re, getopt
-import objects as k8s
+from modules import process as k8s
 
 start_time = time.time()
 config.load_kube_config()

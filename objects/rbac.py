@@ -1,7 +1,7 @@
 from kubernetes.client.rest import ApiException
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
-import objects as k8s
+from modules import process as k8s
 from modules.get_rbac import K8sClusterRole, K8sClusterRoleBinding, \
 K8sNameSpaceRole, K8sNameSpaceRoleBinding
 

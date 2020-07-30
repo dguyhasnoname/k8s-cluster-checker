@@ -1,5 +1,5 @@
 import sys, time, os, getopt
-import objects as k8s
+from modules import process as k8s
 from modules.get_svc import K8sService
 
 start_time = time.time()
@@ -32,13 +32,13 @@ class _Service:
         k8s.Output.print_table(data,headers,True)
 
     def analyse_service(v):
-        if v:
-            k8s.Service.check_service(k8s_object, k8s_object_list)
+        k8s.Service.check_service(k8s_object, k8s_object_list)
 
 def call_all(v,ns):
     _Service(ns)
-    _Service.list_service(v)
     _Service.analyse_service(v)
+    if v: _Service.list_service(v)
+
 
 def main():
     try:

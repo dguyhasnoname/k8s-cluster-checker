@@ -1,7 +1,7 @@
 import sys, time, os, getopt, argparse
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
-import objects as k8s
+from modules import process as k8s
 from modules.get_pods import K8sPods
 from modules.get_svc import K8sService
 from modules.get_deploy import K8sDeploy

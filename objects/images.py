@@ -1,6 +1,6 @@
 import sys, time, os, re, getopt
 import requests
-import objects as k8s
+from modules import process as k8s
 from modules.get_deploy import K8sDeploy
 
 start_time = time.time()

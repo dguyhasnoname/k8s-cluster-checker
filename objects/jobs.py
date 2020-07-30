@@ -1,5 +1,5 @@
 import sys, time, os, getopt
-import objects as k8s
+from modules import process as k8s
 start_time = time.time()
 from modules.get_jobs import K8sJobs
 

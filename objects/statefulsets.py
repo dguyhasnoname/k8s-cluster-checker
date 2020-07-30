@@ -1,5 +1,5 @@
 import sys, time, os, getopt
-import objects as k8s
+from modules import process as k8s
 from modules.get_sts import K8sStatefulSet
 
 start_time = time.time()
@@ -11,7 +11,7 @@ class _Sts:
         if not ns:
             ns = 'all'
         k8s_object_list = K8sStatefulSet.get_sts(ns)    
-    global k8s_object_list
+    global k8s_object
     k8s_object = 'statefulsets'
 
     def check_sts_security(v):

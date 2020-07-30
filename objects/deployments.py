@@ -1,6 +1,6 @@
 import sys, os, getopt, time
 from time import sleep
-import objects as k8s
+from modules import process as k8s
 from modules.get_deploy import K8sDeploy
 
 start_time = time.time()

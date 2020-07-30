@@ -1,5 +1,5 @@
 import sys, time, os, getopt, argparse
-import objects as k8s
+from modules import process as k8s
 from modules.get_pods import K8sPods
 
 start_time = time.time()

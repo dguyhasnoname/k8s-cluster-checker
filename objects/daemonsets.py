@@ -1,6 +1,6 @@
 import sys, time, os, getopt
-import objects as k8s
 from modules.get_ds import K8sDaemonSet
+from modules import process as k8s
 
 start_time = time.time()
 

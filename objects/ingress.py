@@ -1,5 +1,5 @@
 import sys, time, os, getopt, argparse
-import objects as k8s
+from modules import process as k8s
 from modules.get_ingress import K8sIngress
 from modules.get_ns import K8sNameSpace
 
