@@ -11,7 +11,7 @@ class _Nodes:
     def get_nodes_details(v):
         data = []
         headers = ['NODE_NAME', 'K8S_VERSION', 'ROLE', 'NODE_CPU', 'NODE_MEM_GB', \
-        'POD_CIDR', 'OS_NAME', 'DOCKER_VERSION', "TYPE", 'REGION', "VOLUMES_ATTACHED"]
+        'VOLUMES_USED/ATTACHED', 'POD_CIDR', 'OS_NAME', 'DOCKER_VERSION', 'INSTANCE_TYPE', 'REGION']
         for item in k8s_object_list.items:
             node_memory_gb = round((int(re.sub('\D', '', item.status.capacity['memory'])) / 1000000), 1)
             docker_version = item.status.node_info.container_runtime_version.rsplit('//', 1)[1]
@@ -37,13 +37,21 @@ class _Nodes:
             else:
                 region = u'\u2717'
             if item.status.volumes_in_use:
-                volumes = len(item.status.volumes_in_use)
+                volumes_used = len(item.status.volumes_in_use)
             else:
+                volumes_used = u'\u2717'
+            volumes = ""
+            if item.status.volumes_attached:
+                volumes_attached = len(item.status.volumes_attached)
+                volumes = str(volumes_used) + '/' + str(volumes_attached)
+            else:
+                volumes_attached = u'\u2717'
                 volumes = u'\u2717'
+
             data.append([item.metadata.name, item.status.node_info.kubelet_version, \
             tag, item.status.capacity['cpu'], \
-            node_memory_gb, item.spec.pod_cidr, item.status.node_info.os_image, \
-            docker_version, instance_type, region, volumes])
+            node_memory_gb, volumes, item.spec.pod_cidr, item.status.node_info.os_image, \
+            docker_version, instance_type, region, volumes_used, volumes_attached])
             
         total_cpu, total_mem, masters, nodes, etcd, others, total_vol = 0, 0, 0, 0, 0, 0, 0
         for i in data:
@@ -53,23 +61,24 @@ class _Nodes:
             if i[2] == 'node': nodes += 1
             if i[2] == 'etcd': etcd += 1
             if i[2] == 'others': others += 1
-            if i[10] != u'\u2717': total_vol += i[10]
+            if i[11] != u'\u2717': total_vol += i[11]
+
         total_nodes = 'total:  ' + str(masters+nodes+etcd+others)
         node_types = 'masters: ' + str(masters) + "\n" + 'worker:  ' + str(nodes) + "\n" +\
          'etcd:    ' + str(etcd) + "\n" + "others:  " + str(others)
         data.append(['----------', '-----', '----------', '-----', '-----', '-----', \
-        '-----', '-----', '-----', '-----', '-----'])
+        '-----', '-----', '-----', '-----', '-----', '', ''])
         data.append([total_nodes, item.status.node_info.kubelet_version, \
-        node_types, total_cpu, f'{round(total_mem, 2)}GB', u'\u2717', \
-        item.status.node_info.os_image, docker_version, u'\u2717', u'\u2717', total_vol])
+        node_types, total_cpu, f'{round(total_mem, 2)}GB', total_vol, u'\u2717', \
+        item.status.node_info.os_image, docker_version, u'\u2717', u'\u2717', '', ''])
         if v:
             k8s.Output.print_table(data,headers,v)
         else:
-            # print summary of nodes
+            # print summary of nodes from last line of data list
             for i in data[-1:]:
-                short_data = [[i[2], i[1], i[3], i[4], i[6], i[7], i[10]]]
+                short_data = [[i[2], i[1], i[3], i[4], i[6], i[7], i[5]]]
                 short_data.append(['----------', '', '', '', '', '', ''])
-                short_data.append(['total:  ' + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
+                short_data.append(['total:   ' + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
             headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOL_IN_USE']
             k8s.Output.print_table(short_data,headers,True)
         k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
