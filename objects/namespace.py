@@ -11,6 +11,7 @@ from modules.get_ns import K8sNameSpace
 from modules.get_ingress import K8sIngress
 from modules.get_jobs import K8sJobs
 from modules.get_svc import K8sService
+from modules.get_rbac import K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class Namespace:
     global all_ns_list
@@ -45,7 +46,7 @@ class Namespace:
         else:
             ns_list = ns
 
-        with ThreadPoolExecutor(max_workers=7) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             temp_deploy = executor.submit(K8sDeploy.get_deployments, ns)
             temp_ds = executor.submit(K8sDaemonSet.get_damemonsets, ns)
             temp_sts = executor.submit(K8sStatefulSet.get_sts, ns)
@@ -53,6 +54,8 @@ class Namespace:
             temp_svc = executor.submit(K8sService.get_svc, ns)
             temp_ingress = executor.submit(K8sIngress.get_ingress, ns)
             temp_jobs = executor.submit(K8sJobs.get_jobs, ns)
+            temp_role = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
+            temp_role_binding = executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
 
         deployments = temp_deploy.result()
         ds = temp_ds.result()
@@ -61,12 +64,14 @@ class Namespace:
         svc = temp_svc.result()
         ingress = temp_ingress.result()
         jobs = temp_jobs.result()
+        roles = temp_role.result()
+        role_bindings = temp_role_binding.result()
 
         print ("\n{} namespace details:".format(ns))
-        data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs)
+        data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings)
 
         total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
-        total_ing , total_jobs = 0, 0, 0, 0, 0, 0, 0, 0
+        total_ing , total_jobs, total_roles, total_role_bindings = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         for i in data:
             total_ns += 1
             total_deploy = total_deploy + i[1]
@@ -76,17 +81,19 @@ class Namespace:
             total_svc = total_svc + i[5]
             total_ing = total_ing + i[6]
             total_jobs = total_jobs + i[7]
+            total_roles = total_roles + i[8]
+            total_role_bindings = total_role_bindings + i[9]
 
             if i[1] == 0 and i[2] == 0 and i[3] == 0 and i[4] == 0 and \
             not i[0] in ['default', 'kube-node-lease', 'kube-public', 'local']:
                 empty_ns.append([i[0]])
 
         if type(ns_list) != str:
-            data.append(['----------', '---', '---', '---', '---','---', '---', '---'])
+            data.append(['----------', '---', '---', '---', '---','---', '---', '---', '---', '---'])
             data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
-            total_pods, total_svc, total_ing, total_jobs])
+            total_pods, total_svc, total_ing, total_jobs, total_roles,total_role_bindings ])
                     
-        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS'] 
+        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS', 'ROLES', 'ROLE_BINDINGS'] 
         k8s.Output.print_table(data,headers,True)
 
         def get_all_object_data(ns):
@@ -108,6 +115,7 @@ class Namespace:
                 get_all_object_data(ns)
 
         if len(empty_ns) > 0:
+            k8s.Output.separator(k8s.Output.GREEN,'-')
             print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
             "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
             k8s.Output.print_table(empty_ns,headers,True)
