@@ -53,10 +53,11 @@ class Output:
             " {}% | {} {} {}.".format(percentage, \
             len(not_defined), message, k8s_object))
         else:
-            print (Output.GREEN + "All {} has {} defined."\
-            .format(k8s_object,config) + Output.RESET)
+            print (Output.GREEN + "[OK] All {} have config defined."\
+            .format(k8s_object) + Output.RESET)
 
 class Check:
+    # check security context
     def security_context(k8s_object, k8s_object_list):
         data, config_not_defined, privileged_containers, run_as_user, \
         allow_privilege_escalation, read_only_root_filesystem, \
@@ -107,6 +108,7 @@ class Check:
 
         return data
 
+    # check health probes defined
     def health_probes(k8s_object, k8s_object_list):
         data, config_not_defined, readiness_probe, liveness_probe, both = \
         [], [], [], [], []
@@ -148,6 +150,7 @@ class Check:
         Output.GREEN)
         return data
 
+    # check resource requests/limits
     def resources(k8s_object, k8s_object_list):
         data, config_not_defined, limits, requests, both = [], [], [], [], []
         for item in k8s_object_list.items:
@@ -188,6 +191,7 @@ class Check:
         Output.GREEN)
         return data
 
+    # check for rollout strategy
     def strategy(k8s_object, k8s_object_list):
         data = []
         for item in k8s_object_list.items:
@@ -196,6 +200,7 @@ class Check:
                 data.append([item.metadata.name, item.spec.strategy.type])
         return data
 
+    # check for single replica
     def replica(k8s_object, k8s_object_list):
         data, single_replica_count = [], []
         for item in k8s_object_list.items:
@@ -213,7 +218,6 @@ class Check:
             k8s_object, Output.RED)
             return data
 
-    #check for kube2iam
     def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list):
         data = []
         affinity, node_selector, toleration = "", "", ""
@@ -305,6 +309,7 @@ class Check:
         return data
 
 class IngCheck:
+    # checking mapping of ingress
     def get_ing_rules(ingress_rule, v):
         data = ""
         for i in ingress_rule:
@@ -389,6 +394,7 @@ class CtrlProp:
                 "Disable profiling for reduced attack surface.\n")
 
 class Service:
+    # checking type of services
     def check_service(k8s_object, k8s_object_list):
         data, cluster_ip_svc, lb_svc, others_svc = [], [], [], []
         for item in k8s_object_list.items:
@@ -422,6 +428,7 @@ class Rbac:
         data = [api_groups, resources, verbs, rules_count]
         return data
 
+    # analysis RBAC for permissions
     def analyse_role(data, k8s_object):
         full_perm, delete_perm = [], []
         for i in data:
@@ -440,6 +447,7 @@ class Rbac:
             k8s_object, Output.RED) 
 
 class NameSpace:
+    #calculating count for a speific object in a namespace
     def get_ns_object_details(deployments, ds, sts, pods, svc, ingress, jobs,\
      roles, role_bindings, ns, ns_data):
         ns_deployments, ns_ds, ns_sts, ns_pods, ns_svc, ns_ing, \
@@ -481,6 +489,7 @@ class NameSpace:
 
         return ns_data
 
+    # calculating count of different objects type in all namespaces
     def get_ns_details(ns_list, deployments, ds, sts, pods, svc, ingress, \
     jobs, roles, role_bindings):
         ns_data = []
@@ -496,6 +505,7 @@ class NameSpace:
         return data
 
 class Nodes:
+    # checking latest k8s version and comparing it with installed k8s version
     def get_latest_k8s_version(kubelet_version):
         ver = requests.get("https://storage.googleapis.com/kubernetes-release/release/stable.txt")
         latest_k8s_version = ver.text
@@ -508,6 +518,7 @@ class Nodes:
             "Cluster is running with latest kubernetes version: {}"\
             .format(latest_k8s_version))
 
+    # checking latest OS version and comparing it with installed OS version
     def get_latest_os_version(os):
         latest_os_version, current_os_version = "", ""
         if 'Flatcar' in os:
@@ -529,6 +540,7 @@ class Nodes:
                 "PLEASE CONSIDER CHANGING THE DEPRECATED COREOS!")
         return [latest_os_version, current_os_version]
 
+    # checking latest docker version and comparing it with installed docker version
     def get_latest_docker_version(docker_version):
         ver = requests.get("https://api.github.com/repositories/7691631/releases/latest")
         latest_docker_version = ver.json()['tag_name']
