@@ -76,7 +76,7 @@ class _Nodes:
         else:
             # print summary of nodes from last line of data list
             for i in data[-1:]:
-                short_data = [[i[2], i[1], i[3], i[4], i[6], i[7], i[5]]]
+                short_data = [[i[2], i[1], i[3], i[4], i[7], i[8], i[5]]]
                 short_data.append(['----------', '', '', '', '', '', ''])
                 short_data.append(['total:   ' + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
             headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']

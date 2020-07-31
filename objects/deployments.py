@@ -27,7 +27,7 @@ class _Deployment:
         k8s_object_list = K8sDeploy.get_deployments(ns)
 
     global k8s_object
-    k8s_object = 'deployment'  
+    k8s_object = 'deployments'  
 
     def check_deployment_security(v):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
