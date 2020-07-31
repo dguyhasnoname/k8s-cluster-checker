@@ -9,6 +9,20 @@ import namespace as ns
 import services as svc
 from modules.get_cm import K8sConfigMap
 
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass
+
+sys.stdout = Logger("./report")
+
 class Cluster:
     def get_cluster_name():
         cm = K8sConfigMap.get_cm('kube-system')
@@ -57,7 +71,7 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvr", ["help", "verbose", "report"])
         if not opts:        
             call_all("")
             
