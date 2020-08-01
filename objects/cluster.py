@@ -7,6 +7,7 @@ import nodes as node
 import rbac as rbac
 import namespace as ns
 import services as svc
+import crds as crds
 from modules.get_cm import K8sConfigMap
 
 class Logger(object):
@@ -57,6 +58,10 @@ class Cluster:
         print ("\nRBAC details:")
         rbac.call_all(v,'')
 
+    def get_crd_details(v):
+        print ("\CRD details:")
+        crds.call_all(v,'')        
+
 def call_all(v):
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_cluster_name()
@@ -65,6 +70,8 @@ def call_all(v):
     Cluster.get_ctrl_plane_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')    
     Cluster.get_namespaced_data(v)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+    Cluster.get_crd_details(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_rbac_details(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
