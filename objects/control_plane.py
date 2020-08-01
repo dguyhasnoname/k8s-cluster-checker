@@ -12,6 +12,7 @@ class CtrlPlane:
     def check_ctrl_plane_pods():
         namespace = 'kube-system'
         try:
+            print ("\n[INFO] Fetching control plane workload data...")
             ctrl_plane_pods = core.list_namespaced_pod(namespace, \
             label_selector='tier=control-plane', timeout_seconds=10)
             return ctrl_plane_pods
