@@ -552,3 +552,23 @@ class Nodes:
             print(Output.GREEN + "[OK] " + Output.RESET + \
             "Cluster nodes are running on latest docker version: {}"\
             .format(latest_docker_version))
+
+class CRDs:
+    def check_ns_crd(k8s_object_list,k8s_object):
+        ns_crds, cluster_crds, other_crds = [], [], []
+        for item in k8s_object_list.items:
+            if 'Namespaced' in item.spec.scope:
+                ns_crds.append([item.spec.group, item.metadata.name, \
+                item.spec.scope])
+            elif 'Cluster' in item.spec.scope:
+                cluster_crds.append([item.spec.group, item.metadata.name, \
+                item.spec.scope])
+            else:
+                other_crds.append([item.spec.group, item.metadata.name, \
+                item.spec.scope])
+        Output.bar(ns_crds, k8s_object_list.items, \
+        'Namespaced scope', k8s_object, Output.CYAN)
+        Output.bar(cluster_crds, k8s_object_list.items, \
+        'Cluster scope', k8s_object, Output.CYAN)
+        Output.bar(other_crds, k8s_object_list.items, \
+        'Other scope', k8s_object, Output.CYAN)        
