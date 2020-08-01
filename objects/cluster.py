@@ -1,14 +1,15 @@
 import modules.message
+import threading as threading
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
 from modules import process as k8s
-import control_plane as cp
-import nodes as node
-import rbac as rbac
-import namespace as ns
-import services as svc
-import crds as crds
-from modules.get_cm import K8sConfigMap
+# import control_plane as cp
+# import nodes as node
+# import rbac as rbac
+# import namespace as ns
+# import services as svc
+# import crds as crds
+# from modules.get_cm import K8sConfigMap
 
 class Logger(object):
     def __init__(self, filename):
@@ -26,6 +27,7 @@ sys.stdout = Logger("./report")
 
 class Cluster:
     def get_cluster_name():
+        from modules.get_cm import K8sConfigMap
         cm = K8sConfigMap.get_cm('kube-system')
         for item in cm.items:
             if 'kubeadm-config' in item.metadata.name:
@@ -37,10 +39,12 @@ class Cluster:
                 pass
 
     def get_node_data(v):
+        import nodes as node
         print ("\nNode details:")
         node._Nodes.get_nodes_details(v)
     
     def get_namespaced_data(v):
+        import namespace as ns
         data = ns.Namespace.get_ns_data(False,'')
         cluster_pods_list, cluster_svc_list = data[1], data[2]
         k8s.Check.security_context('pods',cluster_pods_list)
@@ -51,18 +55,21 @@ class Cluster:
         k8s.Service.check_service('services', cluster_svc_list)
 
     def get_ctrl_plane_data(v):
+        import control_plane as cp
         print ("\nControl plane details:")
         cp.call_all(v)
     
     def get_rbac_details(v):
+        import rbac as rbac
         print ("\nRBAC details:")
         rbac.call_all(v,'')
 
     def get_crd_details(v):
-        print ("\CRD details:")
+        import crds as crds
+        print ("\nCRD details:")
         crds.call_all(v,'')        
 
-def call_all(v):
+def call_all(v):  
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_cluster_name()
     Cluster.get_node_data(v)
