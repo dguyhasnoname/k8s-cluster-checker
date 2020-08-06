@@ -181,7 +181,7 @@ class Check:
                     config_not_defined.append(False)
         print ("\nresource definition: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
-        Output.bar(config_not_defined,data, "containers found without health-probes defined in running", \
+        Output.bar(config_not_defined,data, "containers found without resources defined in running", \
         k8s_object, Output.RED)
         Output.bar(requests,data, "containers found with only requests defined in running", k8s_object, \
         Output.YELLOW)

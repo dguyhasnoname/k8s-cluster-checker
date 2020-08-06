@@ -24,9 +24,9 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
     - node-details
     - node-roles
     - volumes used
-    - OS, K8s and docker version
+    - OS, K8s and docker version. Also checks for latest versions.
     - overall and namespaced workload count
-    - analysis od admision-controllers
+    - analysis of admision-controllers
     - analysis of security configs for workloads
     - analysis of health-check probes
     - analysis of resource limits/requests of workloads and their QoS
@@ -117,11 +117,6 @@ Now you are ready to run k8s-cluster-checker scripts:
 ![sample_run_3](/docs/imgs/sample_run_3.png)
 ![sample_run](/docs/imgs/sample_run.png)
 
+## Contributions/Issues
 
-
-
-
-
-
-
-
+If you find any bug, please feel free to open an issue in this repo. If you want to contribute, PRs are welcome.
