@@ -8,18 +8,20 @@ class _CRDs:
     global k8s_object_list, k8s_object
     k8s_object_list = K8sCRDs.get_crds()
     k8s_object = 'crds'
+    #print (k8s_object_list)
 
     def get_crds(v):
-        data, crd_group, temp_group, count_crd_group_crds = [], [], [], []
-        temp = ''
+        data, crd_group, count_crd_group_crds = [], [], []
         for item in k8s_object_list.items:
             data.append([item.spec.group, item.metadata.name, item.spec.scope])
             crd_group.append([item.spec.group])
 
         data.sort()
         crd_group.sort()
+        # de-duplicate crd groups
         crd_group = list(k for k, _ in itertools.groupby(crd_group))
 
+        # calculate count of crds per crd-group
         for i in crd_group:
             count_crd_group_crds = 0
             for j in data:

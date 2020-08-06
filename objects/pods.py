@@ -72,7 +72,7 @@ class _Pods:
         k8s.Output.print_table(data,headers,v)
 
     def check_image_pull_policy(v):
-        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', 'IMAGE', 'LATEST_TAG_AVAILABLE']
+        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY', 'LATEST_TAG_AVAILABLE']
         data = k8s.Check.image_pull_policy(k8s_object,k8s_object_list)
         k8s.Output.print_table(data,headers,v)
 
@@ -90,6 +90,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
