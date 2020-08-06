@@ -1,5 +1,7 @@
 # k8s-cluster-checker
 
+![logo](/docs/imgs/logo.png)
+
 k8s-cluster-checker is bundle of python scripts which can be used to analyse below configurations in a kubernetes cluster:
 
 - OS version(supports flatcar OS and coreOS only)
