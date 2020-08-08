@@ -15,22 +15,11 @@ class _Service:
     k8s_object = 'services'
 
     def list_service(v):
-        data = []
         headers = ['NAMESPACE', 'SERVICE', 'CLUSTER_IP', 'SELECTOR']
-        for item in k8s_object_list.items:
-            if item.spec.selector:
-                for i in item.spec.selector:
-                    app_label = i
-                    break
-                data.append([item.metadata.namespace, item.metadata.name, \
-                item.spec.cluster_ip, app_label + ": " + item.spec.selector[app_label]])
-            else:
-                data.append([item.metadata.namespace, item.metadata.name, \
-                item.spec.cluster_ip, "None"])
+        data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, v)
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " , len(data) - 1 , '-', '-'])
         k8s.Output.print_table(data, headers, v)
-        k8s.Service.check_service(data, k8s_object, k8s_object_list, headers)
 
 def call_all(v,ns):
     _Service(ns)
@@ -41,6 +30,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
