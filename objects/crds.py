@@ -11,7 +11,8 @@ class _CRDs:
     #print (k8s_object_list)
 
     def get_crds(v):
-        data, crd_group, count_crd_group_crds = [], [], []
+        data, crd_group, count_crd_group_crds, headers = \
+        [], [], [], ['CRD_GROUP', 'CRD_COUNT']
         for item in k8s_object_list.items:
             data.append([item.spec.group, item.metadata.name, item.spec.scope])
             crd_group.append([item.spec.group])
@@ -32,13 +33,10 @@ class _CRDs:
         crd_group.append(['-----------', '----'])
         crd_group.append(['Total: ' + str(len(crd_group) - 1), len(data)])
 
-        k8s.Output.print_table(crd_group, ['CRD_GROUP', 'CRD_COUNT'], True)
-        k8s.CRDs.check_ns_crd(k8s_object_list,k8s_object)
-        if v:
-            k8s.Output.print_table(data, ['CRD_GROUP', 'CRD_NAME', 'SCOPE'], True)
+        k8s.Output.print_table(crd_group, k8s_object, True)
+        k8s.CRDs.check_ns_crd(k8s_object_list, k8s_object, data, headers, v)
 
         return data
-        
 
 def call_all(v,ns):
     _CRDs.get_crds(v)
