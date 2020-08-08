@@ -29,7 +29,7 @@ class _Service:
                 item.spec.cluster_ip, "None"])
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " , len(data) - 1 , '-', '-'])
-        k8s.Output.print_table(data,headers,True)
+        k8s.Output.print_table(data, headers, v)
 
     def analyse_service(v):
         k8s.Service.check_service(k8s_object, k8s_object_list)
@@ -37,7 +37,7 @@ class _Service:
 def call_all(v,ns):
     _Service(ns)
     _Service.analyse_service(v)
-    if v: _Service.list_service(v)
+    _Service.list_service(v)
 
 
 def main():
