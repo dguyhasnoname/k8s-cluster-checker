@@ -51,11 +51,11 @@ class _Pods:
         data = k8s.Check.security_context(k8s_object,k8s_object_list,headers,v)
 
     def check_pod_health_probes(v):
-        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']
         data = k8s.Check.health_probes(k8s_object,k8s_object_list,headers,v)
 
     def check_pod_resources(v):
-        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
+        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
         data = k8s.Check.resources(k8s_object,k8s_object_list,headers,v)
 
     def check_pod_qos(v):
@@ -67,7 +67,7 @@ class _Pods:
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object,k8s_object_list,headers,v)
 
     def check_image_pull_policy(v):
-        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY', 'LATEST_TAG_AVAILABLE']
+        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY']
         data = k8s.Check.image_pull_policy(k8s_object,k8s_object_list,headers,v)
 
 def call_all(v,ns):
