@@ -24,17 +24,24 @@ class Namespace:
     #     k8s.Output.bar(highest_pod_count, data[0][1], \
     #     'is running highest workload share','cluster','pods')
 
-    def get_object_data(fun,k8s_object):
+    def get_object_data(fun, k8s_object, ns, v):
         k8s_object_list = fun
         if len(k8s_object_list.items):
             if not 'services' in k8s_object:
-                k8s.Check.security_context(k8s_object, k8s_object_list)
-                k8s.Check.health_probes(k8s_object, k8s_object_list)
-                k8s.Check.resources(k8s_object, k8s_object_list)
+                k8s.Check.security_context(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
+                'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v)
+                k8s.Check.health_probes(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v)
+                k8s.Check.resources(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v)
 
-                if k8s_object in ['deployments','statefulsets']: k8s.Check.replica(k8s_object, k8s_object_list)
+                if k8s_object in ['deployments','statefulsets','jobs']: \
+                k8s.Check.replica(k8s_object +  'ns', k8s_object_list, \
+                ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v)
             else:
-                k8s.Service.check_service(k8s_object, k8s_object_list)
+                k8s.Service.get_service(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'SERVICE', 'CLUSTER_IP', 'SELECTOR'], v)
         else:
             print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
 
@@ -46,6 +53,7 @@ class Namespace:
         else:
             ns_list = ns
 
+        # getting objects list in threads
         with ThreadPoolExecutor(max_workers=10) as executor:
             temp_deploy = executor.submit(K8sDeploy.get_deployments, ns)
             temp_ds = executor.submit(K8sDaemonSet.get_damemonsets, ns)
@@ -57,6 +65,7 @@ class Namespace:
             temp_role = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
             temp_role_binding = executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
 
+        # stroing data from threads ran above
         deployments = temp_deploy.result()
         ds = temp_ds.result()
         sts = temp_sts.result()
@@ -67,11 +76,15 @@ class Namespace:
         roles = temp_role.result()
         role_bindings = temp_role_binding.result()
 
+        # getting count of each ns objects and printing in table
         print ("\n{} namespace details:".format(ns))
-        data = k8s.NameSpace.get_ns_details(ns_list,deployments,ds,sts,pods,svc,ingress,jobs,roles,role_bindings)
+        data = k8s.NameSpace.get_ns_details(ns_list, deployments, ds, sts, \
+        pods, svc, ingress, jobs, roles, role_bindings)
 
+        # getting total object-wise count across the cluster
         total_ns, total_deploy, total_ds, total_sts, total_pods,  total_svc, \
-        total_ing , total_jobs, total_roles, total_role_bindings = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        total_ing , total_jobs, total_roles, total_role_bindings \
+        = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         for i in data:
             total_ns += 1
             total_deploy = total_deploy + i[1]
@@ -88,6 +101,7 @@ class Namespace:
             not i[0] in ['default', 'kube-node-lease', 'kube-public', 'local']:
                 empty_ns.append([i[0]])
 
+        # calculating cluster-wide count of objects if namespace is no provided
         if type(ns_list) != str:
             data.append(['----------', '---', '---', '---', '---','---', '---', '---', '---', '---'])
             data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
@@ -96,29 +110,32 @@ class Namespace:
         headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS', 'ROLES', 'ROLE_BINDINGS'] 
         k8s.Output.print_table(data,headers,True)
 
-        def get_all_object_data(ns):
+        # get namespace wise object details. Will give output in verbose mode
+        def get_all_object_data(ns,v):
             print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
 
-            Namespace.get_object_data(K8sDeploy.get_deployments(ns), 'deployments')
-            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), 'damemonsets')
-            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), 'statefulsets')
-            Namespace.get_object_data(K8sJobs.get_jobs(ns), 'jobs')
-            Namespace.get_object_data(K8sService.get_svc(ns),'services')
+            Namespace.get_object_data(K8sDeploy.get_deployments(ns), 'deployments', ns, v)
+            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), 'damemonsets', ns, v)
+            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), 'statefulsets', ns, v)
+            Namespace.get_object_data(K8sJobs.get_jobs(ns), 'jobs', ns, v)
+            Namespace.get_object_data(K8sService.get_svc(ns),'services', ns, v)
 
         if v:
             if type(ns_list) != str:
                 for item in ns_list.items:
                     ns = item.metadata.name
                     k8s.Output.separator(k8s.Output.GREEN,'-')
-                    get_all_object_data(ns)
+                    get_all_object_data(ns, True)
             else:
                 get_all_object_data(ns)
 
+        # getting namespaces which are empty
         if len(empty_ns) > 0:
-            k8s.Output.separator(k8s.Output.GREEN,'-')
+            k8s.Output.separator(k8s.Output.GREEN, '-')
             print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
             "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
             k8s.Output.print_table(empty_ns,headers,True)
+
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
         
 def call_all(v,ns):
