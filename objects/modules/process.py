@@ -1,7 +1,7 @@
 from columnar import columnar
 from click import style
 from packaging import version
-import os, re, time, requests, json
+import os, re, time, requests, json, csv
 
 class Output:
     RED = '\033[31m'
@@ -22,12 +22,51 @@ class Output:
         print(Output.GREEN + "\nTotal time taken: " + Output.RESET + \
         "{}s".format(round((time.time() - start_time), 2)))
 
-    def separator(color,char):
+    # prints separator line between output
+    def separator(color, char):
         columns, rows = os.get_terminal_size(0)
         for i in range(columns):
             print (color + char, end="" + Output.RESET)
         print ("\n")
 
+    # remove unicode characters for reporting
+    def remove_unicode(x):
+        a = ['No' if v in [u'\u2717', None] else v for v in x]
+        b = ['Yes' if v in [u'\u2714'] else v for v in a]
+        return b
+
+    # converts list data to csv
+    def csv_out(data, headers, k8s_object, config):
+        filename =  './reports/csv/' + k8s_object + "_" + config + "_" + "report.csv"
+        with open(filename, "w", newline="") as file:
+            writer = csv.writer(file, delimiter=',')
+            writer.writerow(i for i in headers)
+            for j in data:
+                x = Output.remove_unicode(j)
+                writer.writerow(x)
+
+    # generating json data
+    def json_out(data, headers, k8s_object, config):
+        json_data = []
+        headers = [x.lower() for x in headers]
+        for item in data:
+            temp_dic = {}
+            # storing json data in dict for each list in data
+            for i in range(len(headers) - 1):
+                for j in range(len(item)):
+                    temp_dic.update({headers[i]:item[i]})
+
+            # appending all json dicts to form a list
+            json_data.append(temp_dic)
+
+        # writing out json data in file based on object type and config being checked
+        filename =  './reports/json/' + k8s_object + "_" + config + "_" + "report.json"
+        f = open(filename, 'w')
+        f.write(json.dumps(json_data))
+        f.close()
+        return json_data
+
+    # prints table from lists of lists: data
     def print_table(data, headers, verbose):
         if verbose and len(data) != 0:
             table = columnar(data, headers, no_borders=True, \
@@ -36,6 +75,7 @@ class Output:
         else:
             return
 
+    # prints analysis in bar format with %age, count and message
     def bar(not_defined, data, message, k8s_object, color):
         show_bar = []
         if len(not_defined) == 0:
@@ -110,13 +150,10 @@ class Check:
         "containers only have read-only root filesystem in all running", \
         k8s_object, Output.GREEN)
         Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, 'security_context')  
+        json_data = Output.json_out(data, headers, k8s_object, 'security_context')
 
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "privileged_esc": i[3],\
-                "privilged": i[4], "read_only_fs": i[5], "run_as_non_root": i[6], \
-                "run_as_user": i[7] } for i in data]    
-
-        return json.dumps(json_data)
+        return json_data
 
     # check health probes defined
     def health_probes(k8s_object, k8s_object_list, headers, v):
@@ -149,10 +186,10 @@ class Check:
                     container.name, u'\u2717', u'\u2717'])
                     config_not_defined.append(False)
 
-        print ("\nhealth_check definition: {} {}"\
+        print ("\nhealth_probes definition: {} {}"\
         .format(len(k8s_object_list.items), k8s_object))
         Output.bar(config_not_defined,data, \
-        "containers found with no health-check in running", \
+        "containers found with no health probes in running", \
         k8s_object, Output.RED)
         Output.bar(liveness_probe, data, \
         "containers found with only liveness probe defined in running", \
@@ -164,12 +201,10 @@ class Check:
         "containers found having both liveness and readiness probe defined in running", 
         k8s_object, Output.GREEN)
         Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, 'health_probes')
+        json_data = Output.json_out(data, headers, k8s_object, 'health_probes')    
 
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "readiness_probe": i[3],\
-                "liveness_probe": i[4]} for i in data]    
-
-        return json.dumps(json_data)
+        return json_data
 
     # check resource requests/limits
     def resources(k8s_object, k8s_object_list, headers, v):
@@ -215,12 +250,10 @@ class Check:
         "containers found with both limits and requests defined in running", \
         k8s_object, Output.GREEN)
         Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, 'resource_definition')
+        json_data = Output.json_out(data, headers, k8s_object, 'resource_definition')  
 
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "limits": i[3],\
-                "requests": i[4]} for i in data]    
-
-        return json.dumps(json_data)
+        return json_data
 
     # check for rollout strategy
     def strategy(k8s_object, k8s_object_list, headers, v):
@@ -230,11 +263,13 @@ class Check:
             if item.spec.strategy is not None:
                 data.append([item.metadata.name, item.spec.strategy.type])
         Output.print_table(data, headers, v)
-        return data
+        Output.csv_out(data, headers, k8s_object, 'rollout_strategy')
+        json_data = Output.json_out(data, headers, k8s_object, 'rollout_strategy')        
+        return json_data
 
     # check for single replica
     def replica(k8s_object, k8s_object_list, headers, v):
-        data, single_replica_count = [], []
+        data, single_replica_count, multi_replica_count = [], [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
             if item.spec.replicas is not None:
@@ -242,6 +277,8 @@ class Check:
                 item.spec.replicas])
                 if item.spec.replicas == 1:
                     single_replica_count.append(True)
+                else:
+                    multi_replica_count.append(True)
 
         if len(single_replica_count) > 0:
             print ("\nsingle replica check: {} {}".format(len(k8s_object_list.items), \
@@ -249,7 +286,10 @@ class Check:
             Output.bar(single_replica_count, data, str(k8s_object) + \
             ' are running with 1 replica in all', k8s_object, Output.RED)
             Output.print_table(data, headers, v)
-            return data
+            Output.csv_out(data, headers, k8s_object, 'single_replica_deployment')
+            json_data = Output.json_out(data, headers, k8s_object, 'single_replica_deployment')        
+            return json_data
+        return data
 
     def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v):
         data = []
@@ -286,12 +326,12 @@ class Check:
             data.append([item.metadata.namespace, k8s_object_name, \
             node_selector, toleration, affinity, priority_class_name])
         Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, \
+        'tolerations_affinity_node_selector_priority')
+        json_data = Output.json_out(data, headers, k8s_object, \
+        'tolerations_affinity_node_selector_priority')  
 
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "node_selector": i[2], \
-        "tolerations": i[3], "affinity": i[4], "priority_class": i[5]} for i in data]    
-
-        return json.dumps(json_data)
+        return json_data
 
     def qos(k8s_object, k8s_object_list, headers, v):
         data, guaranteed, besteffort, burstable = [], [], [], []
@@ -315,9 +355,8 @@ class Check:
         Output.bar(besteffort, data, str(k8s_object) + \
         ' are having BestEffort QoS out of all', k8s_object, Output.RED)
         Output.print_table(data, headers, v)
-
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "qos": i[2]} for i in data]    
+        Output.csv_out(data, headers, k8s_object, 'QoS')
+        json_data = Output.json_out(data, headers, k8s_object, 'QoS')
 
         return json.dumps(json_data)
 
@@ -353,12 +392,10 @@ class Check:
         'containers have "Never" image pull-policy in all', \
         k8s_object, Output.RED)
         Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, 'image_pull_policy')
+        json_data = Output.json_out(data, headers, k8s_object, 'image_pull_policy')    
 
-        # generating json_data for reporting
-        json_data = [{"namespace": i[0], "pod": i[1], "image": i[2], \
-        "image_pull_policy": i[3]} for i in data]    
-
-        return json.dumps(json_data)
+        return json_data
 
 class IngCheck:
     # checking mapping of ingress
@@ -374,13 +411,16 @@ class IngCheck:
                     +  str(j.backend.service_port) + "]" + "\n"
         return data
 
-    def list_ingress(k8s_object_list, headers, v):
+    def list_ingress(k8s_object_list, k8s_object, headers, v):
         data = []
         for i in k8s_object_list.items:
             data.append([i.metadata.namespace, i.metadata.name, \
             len(i.spec.rules), IngCheck.get_ing_rules(i.spec.rules,v)])
         Output.print_table(data, headers, v)
-        return data
+        Output.csv_out(data, headers, k8s_object, 'ingress')
+        json_data = Output.json_out(data, headers, k8s_object, 'ingress')    
+
+        return json_data
 
 class CtrlProp:
     def read_admission_controllers():
@@ -448,8 +488,8 @@ class CtrlProp:
 
 class Service:
     # checking type of services
-    def check_service(k8s_object, k8s_object_list):
-        data, cluster_ip_svc, lb_svc, others_svc = [], [], [], []
+    def check_service(data, k8s_object, k8s_object_list, headers):
+        cluster_ip_svc, lb_svc, others_svc = [], [], []
         for item in k8s_object_list.items:
             if 'ClusterIP' in item.spec.type:
                 cluster_ip_svc.append([item.metadata.namespace, item.metadata.name])
@@ -465,6 +505,10 @@ class Service:
         'LoadBalancer type', k8s_object, Output.CYAN)
         Output.bar(others_svc, k8s_object_list.items, \
         'others type', k8s_object, Output.RED)
+        Output.csv_out(data, headers, k8s_object, 'service')
+        json_data = Output.json_out(data, headers, k8s_object, 'service')    
+
+        return json_data        
 
 class Rbac:
     def get_rules(rules):
@@ -482,7 +526,7 @@ class Rbac:
         return data
 
     # analysis RBAC for permissions
-    def analyse_role(data, k8s_object):
+    def analyse_role(data, headers, k8s_object):
         full_perm, delete_perm = [], []
         for i in data:
             if '*' in i[4]: full_perm.append([i[0]])
@@ -497,7 +541,11 @@ class Rbac:
         if len(delete_perm):
             Output.bar(delete_perm, data, \
             'are having delete permission on designated APIs', \
-            k8s_object, Output.RED) 
+            k8s_object, Output.RED)
+        Output.csv_out(data, headers, 'rbac', k8s_object)
+        json_data = Output.json_out(data, headers, 'rbac', k8s_object)
+
+        return json_data        
 
 class NameSpace:
     #calculating count for a speific object in a namespace

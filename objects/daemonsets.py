@@ -42,7 +42,7 @@ class _Daemonset:
         data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
 
     def check_damemonset_tolerations_affinity_node_selector_priority(v):  
-        headers = ['DAEMONSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
+        headers = ['NAMESPACE', 'DAEMONSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
         data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v)
 
 def call_all(v,ns):

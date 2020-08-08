@@ -30,15 +30,11 @@ class _Service:
         data.append(['----------', '---', '---', '---'])
         data.append(["Total: " , len(data) - 1 , '-', '-'])
         k8s.Output.print_table(data, headers, v)
-
-    def analyse_service(v):
-        k8s.Service.check_service(k8s_object, k8s_object_list)
+        k8s.Service.check_service(data, k8s_object, k8s_object_list, headers)
 
 def call_all(v,ns):
     _Service(ns)
-    _Service.analyse_service(v)
     _Service.list_service(v)
-
 
 def main():
     try:

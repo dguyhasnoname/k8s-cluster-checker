@@ -39,7 +39,7 @@ class _Ingress:
     def list_ingress(v):
         data = []
         headers = ['NAMESPACE', 'INGRESS', 'RULES', 'HOST [SERVICE:PORT]']
-        data = k8s.IngCheck.list_ingress(k8s_object_list, headers, v)
+        data = k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, headers, v)
 
 def call_all(v,ns):
     _Ingress(ns)
@@ -51,6 +51,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:

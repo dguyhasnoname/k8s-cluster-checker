@@ -68,6 +68,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
