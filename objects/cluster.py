@@ -47,12 +47,18 @@ class Cluster:
         import namespace as ns
         data = ns.Namespace.get_ns_data(False,'')
         cluster_pods_list, cluster_svc_list = data[1], data[2]
-        k8s.Check.security_context('pods',cluster_pods_list)
-        k8s.Check.health_probes('pods',cluster_pods_list)
-        k8s.Check.resources('pods',cluster_pods_list)
-        k8s.Check.qos('pods',cluster_pods_list)
-        k8s.Check.image_pull_policy('pods',cluster_pods_list)
-        k8s.Service.check_service('services', cluster_svc_list)
+        k8s.Check.security_context('pods', cluster_pods_list, \
+        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
+        'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v)
+        k8s.Check.health_probes('pods', cluster_pods_list, \
+        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v)
+        k8s.Check.resources('pods',cluster_pods_list, \
+        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v)
+        k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], v)
+        k8s.Check.image_pull_policy('pods', cluster_pods_list, \
+        ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY'], v)
+        k8s.Service.get_service('services', cluster_svc_list, \
+        ['NAMESPACE', 'SERVICE', 'CLUSTER_IP', 'SELECTOR'], v)
 
     def get_ctrl_plane_data(v):
         import control_plane as cp
@@ -75,7 +81,7 @@ def call_all(v):
     Cluster.get_node_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_ctrl_plane_data(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')    
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_namespaced_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_crd_details(v)
