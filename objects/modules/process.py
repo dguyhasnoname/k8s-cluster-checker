@@ -37,7 +37,10 @@ class Output:
 
     # converts list data to csv
     def csv_out(data, headers, k8s_object, config):
-        filename =  './reports/csv/' + k8s_object + "_" + config + "_" + "report.csv"
+        directory = './reports/csv/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        filename =  directory + k8s_object + "_" + config + "_" + "report.csv"
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(i for i in headers)
@@ -52,15 +55,17 @@ class Output:
         for item in data:
             temp_dic = {}
             # storing json data in dict for each list in data
-            for i in range(len(headers) - 1):
+            for i in range(len(headers)):
                 for j in range(len(item)):
                     temp_dic.update({headers[i]:item[i]})
 
             # appending all json dicts to form a list
             json_data.append(temp_dic)
-
+        directory = './reports/json/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         # writing out json data in file based on object type and config being checked
-        filename =  './reports/json/' + k8s_object + "_" + config + "_" + "report.json"
+        filename =  directory + k8s_object + "_" + config + "_" + "report.json"
         f = open(filename, 'w')
         f.write(json.dumps(json_data))
         f.close()
@@ -453,7 +458,8 @@ class CtrlProp:
         return data
 
     def check_admission_controllers(commands, v):
-        admission_plugins_enabled, admission_plugins_not_enabled = [], []
+        data, admission_plugins_enabled, admission_plugins_not_enabled, \
+        headers = [], [], [], ['ADMISSION_PLUGINS', 'ENABLED']
         important_admission_plugins = ['AlwaysPullImages', \
         'DenyEscalatingExec', 'LimitRange', 'NodeRestriction', \
         'PodSecurityPolicy', 'ResourceQuota', 'SecurityContextDeny']
@@ -462,20 +468,25 @@ class CtrlProp:
         for c in commands:
             if 'enable-admission-plugins' in c:
                 admission_plugins_enabled = (c.rsplit("=")[1]).split(",")
-                print (Output.GREEN + "\nImportant Admission Controllers enabled: \n"+ \
-                Output.RESET + "{}\n".format('\n'.join(admission_plugins_enabled)))
-
+                for i in admission_plugins_enabled:
+                    data.append([i, u'\u2714'])
                 admission_plugins_list = CtrlProp.read_admission_controllers()
 
                 # checking difference in addmission controllers
                 admission_plugins_not_enabled = list(set(important_admission_plugins) - \
                 set(admission_plugins_enabled))
 
-                print (Output.RED + "Important Admission Controllers not enabled: \n" + \
-                Output.RESET  + "{}\n".format('\n'.join(admission_plugins_not_enabled)))
+                for i in admission_plugins_not_enabled:
+                    data.append([i, u'\u2717'])
 
-                if v: print (Output.YELLOW + "Admission Controllers available in k8s: \n" + \
-                Output.RESET + "[{}]\n".format(admission_plugins_list))
+                if v:
+                    # converting string admission_plugins_list into list and looping over
+                    for i in admission_plugins_list.split(", "):
+                        data.append([i, u'\u2717'])
+                if not v: print ("\nStatus of important admission controllers:")
+                Output.print_table(data, headers, True)
+                Output.csv_out(data, headers, 'admission_controllers', '')
+                json_data = Output.json_out(data, headers, 'admission_controllers', '')
 
     def secure_scheduler_check(commands):
         for c in commands:
@@ -488,7 +499,7 @@ class CtrlProp:
 
 class Service:
     # checking type of services
-    def check_service(data, k8s_object, k8s_object_list, headers):
+    def check_service(k8s_object, k8s_object_list):
         cluster_ip_svc, lb_svc, others_svc = [], [], []
         for item in k8s_object_list.items:
             if 'ClusterIP' in item.spec.type:
@@ -505,10 +516,24 @@ class Service:
         'LoadBalancer type', k8s_object, Output.CYAN)
         Output.bar(others_svc, k8s_object_list.items, \
         'others type', k8s_object, Output.RED)
+
+    def get_service(k8s_object, k8s_object_list, headers, v):
+        data = []
+        for item in k8s_object_list.items:
+            if item.spec.selector:
+                for i in item.spec.selector:
+                    app_label = i
+                    break
+                data.append([item.metadata.namespace, item.metadata.name, \
+                item.spec.cluster_ip, app_label + ": " + item.spec.selector[app_label]])
+            else:
+                data.append([item.metadata.namespace, item.metadata.name, \
+                item.spec.cluster_ip, "None"])
+        Service.check_service(k8s_object, k8s_object_list)
         Output.csv_out(data, headers, k8s_object, 'service')
         json_data = Output.json_out(data, headers, k8s_object, 'service')    
 
-        return json_data        
+        return data
 
 class Rbac:
     def get_rules(rules):
@@ -674,4 +699,8 @@ class CRDs:
         Output.bar(other_crds, k8s_object_list.items, \
         'Other scope', k8s_object, Output.CYAN)   
 
-        Output.print_table(data, headers, v)     
+        Output.print_table(data, headers, v)
+        Output.csv_out(data, headers, k8s_object, '')
+        json_data = Output.json_out(data, headers, k8s_object, '')
+
+        return json_data
