@@ -39,8 +39,7 @@ class _Ingress:
     def list_ingress(v):
         data = []
         headers = ['NAMESPACE', 'INGRESS', 'RULES', 'HOST [SERVICE:PORT]']
-        data = k8s.IngCheck.list_ingress(k8s_object_list,v)
-        k8s.Output.print_table(data,headers,v)
+        data = k8s.IngCheck.list_ingress(k8s_object_list, headers, v)
 
 def call_all(v,ns):
     _Ingress(ns)
