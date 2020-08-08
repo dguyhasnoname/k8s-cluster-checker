@@ -35,18 +35,15 @@ class CtrlPlane:
     def check_ctrl_plane_security(v):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object,k8s_object_list)
-        k8s.Output.print_table(data,headers,v)        
+        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
 
     def check_ctrl_plane_pods_health_probes(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object,k8s_object_list)
-        k8s.Output.print_table(data,headers,v)   
+        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)
 
     def check_ctrl_plane_pods_resources(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
-        data = k8s.Check.resources(k8s_object,k8s_object_list)
-        k8s.Output.print_table(data,headers,v)
+        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
 
     # gets file name from check_ctrl_plane_pods_properties function
     def check_ctrl_plane_pods_properties_operation(item,filename,headers,v):
@@ -56,8 +53,7 @@ class CtrlPlane:
 
     def check_ctrl_plane_pods_qos(v):
         headers = ['NAMESPACE', 'POD', 'QoS']
-        data = k8s.Check.qos(k8s_object,k8s_object_list)
-        k8s.Output.print_table(data,headers,v)        
+        data = k8s.Check.qos(k8s_object, k8s_object_list, headers, v)
 
     def check_ctrl_plane_pods_properties(v):
         container_name_check = ""
