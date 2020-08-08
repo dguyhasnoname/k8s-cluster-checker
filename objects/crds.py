@@ -33,7 +33,7 @@ class _CRDs:
         crd_group.append(['-----------', '----'])
         crd_group.append(['Total: ' + str(len(crd_group) - 1), len(data)])
 
-        k8s.Output.print_table(crd_group, k8s_object, True)
+        k8s.Output.print_table(crd_group, headers, True)
         k8s.CRDs.check_ns_crd(k8s_object_list, k8s_object, data, headers, v)
 
         return data
