@@ -58,7 +58,7 @@ class Output:
 
 class Check:
     # check security context
-    def security_context(k8s_object, k8s_object_list):
+    def security_context(k8s_object, k8s_object_list,headers,v):
         data, config_not_defined, privileged_containers, run_as_user, \
         allow_privilege_escalation, read_only_root_filesystem, \
         run_as_non_root = [], [], [], [], [], [], []
@@ -105,11 +105,11 @@ class Check:
         k8s_object, Output.GREEN)
         Output.bar(read_only_root_filesystem, data, "containers only have read-only root filesystem in all running", \
         k8s_object, Output.GREEN)
-
+        Output.print_table(data,headers,v)
         return data
 
     # check health probes defined
-    def health_probes(k8s_object, k8s_object_list):
+    def health_probes(k8s_object, k8s_object_list,headers,v):
         data, config_not_defined, readiness_probe, liveness_probe, both = \
         [], [], [], [], []
         for item in k8s_object_list.items:
@@ -148,10 +148,11 @@ class Check:
         k8s_object, Output.YELLOW)
         Output.bar(both, data, "containers found having both liveness and readiness probe defined in running", k8s_object, \
         Output.GREEN)
+        Output.print_table(data,headers,v)
         return data
 
     # check resource requests/limits
-    def resources(k8s_object, k8s_object_list):
+    def resources(k8s_object, k8s_object_list,headers,v):
         data, config_not_defined, limits, requests, both = [], [], [], [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -189,19 +190,21 @@ class Check:
         Output.YELLOW)
         Output.bar(both,data, "containers found with both limits and requests defined in running", k8s_object, \
         Output.GREEN)
+        Output.print_table(data,headers,v)
         return data
 
     # check for rollout strategy
-    def strategy(k8s_object, k8s_object_list):
+    def strategy(k8s_object, k8s_object_list,headers,v):
         data = []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
             if item.spec.strategy is not None:
                 data.append([item.metadata.name, item.spec.strategy.type])
+        Output.print_table(data,headers,v)
         return data
 
     # check for single replica
-    def replica(k8s_object, k8s_object_list):
+    def replica(k8s_object, k8s_object_list,headers,v):
         data, single_replica_count = [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -216,9 +219,10 @@ class Check:
             k8s_object))
             Output.bar(single_replica_count, data, str(k8s_object) + ' are running with 1 replica in all', \
             k8s_object, Output.RED)
+            Output.print_table(data,headers,v)
             return data
 
-    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list):
+    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list,headers,v):
         data = []
         affinity, node_selector, toleration = "", "", ""
         for item in k8s_object_list.items:
@@ -252,9 +256,10 @@ class Check:
                 affinity = u'\u2717'
             data.append([item.metadata.namespace, k8s_object_name, \
             node_selector, toleration, affinity, priority_class_name])
+        Output.print_table(data,headers,v)
         return data
 
-    def qos(k8s_object, k8s_object_list):
+    def qos(k8s_object, k8s_object_list,headers,v):
         data, guaranteed, besteffort, burstable = [], [], [], []
         if not k8s_object_list: return
         for item in k8s_object_list.items:
@@ -275,10 +280,10 @@ class Check:
         Output.YELLOW)
         Output.bar(besteffort, data, str(k8s_object) + ' are having BestEffort QoS out of all', k8s_object, \
         Output.RED)
-
+        Output.print_table(data,headers,v)
         return data
 
-    def image_pull_policy(k8s_object, k8s_object_list):
+    def image_pull_policy(k8s_object, k8s_object_list,headers,v):
         data, if_not_present, always, never= [], [], [], []
         config = 'image pull-policy'
         for item in k8s_object_list.items:
@@ -306,6 +311,7 @@ class Check:
         k8s_object, Output.GREEN)
         Output.bar(never, data, 'containers have "Never" image pull-policy in all', \
         k8s_object, Output.RED)
+        Output.print_table(data,headers,v)
         return data
 
 class IngCheck:
@@ -322,11 +328,12 @@ class IngCheck:
                     +  str(j.backend.service_port) + "]" + "\n"
         return data
 
-    def list_ingress(k8s_object_list, v):
+    def list_ingress(k8s_object_list, headers, v):
         data = []
         for i in k8s_object_list.items:
             data.append([i.metadata.namespace, i.metadata.name, \
             len(i.spec.rules), IngCheck.get_ing_rules(i.spec.rules,v)])
+        Output.print_table(data, headers, v)
         return data
 
 class CtrlProp:
