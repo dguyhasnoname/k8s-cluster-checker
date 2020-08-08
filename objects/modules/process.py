@@ -58,7 +58,7 @@ class Output:
 
 class Check:
     # check security context
-    def security_context(k8s_object, k8s_object_list,headers,v):
+    def security_context(k8s_object, k8s_object_list, headers, v):
         data, config_not_defined, privileged_containers, run_as_user, \
         allow_privilege_escalation, read_only_root_filesystem, \
         run_as_non_root = [], [], [], [], [], [], []
@@ -93,23 +93,33 @@ class Check:
 
         print ("\nsecurity_context definition: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
-        Output.bar(config_not_defined, data, "containers have no security_context defined in running" , \
+        Output.bar(config_not_defined, data, \
+        "containers have no security_context defined in running", \
         k8s_object, Output.RED)
-        Output.bar(privileged_containers, data, 'containers are in prvilleged mode in running', k8s_object, \
-        Output.RED)
-        Output.bar(allow_privilege_escalation, data, 'containers found in allow_privilege_escalation mode in running', \
+        Output.bar(privileged_containers, data, \
+        'containers are in prvilleged mode in running', k8s_object, Output.RED)
+        Output.bar(allow_privilege_escalation, data, \
+        'containers found in allow_privilege_escalation mode in running', \
         k8s_object, Output.RED)
-        Output.bar(run_as_user, data, "containers have some user defined in running", k8s_object, \
-        Output.GREEN)
-        Output.bar(run_as_non_root, data, "containers are having non_root_user in running", \
+        Output.bar(run_as_user, data, \
+        "containers have some user defined in running", 
         k8s_object, Output.GREEN)
-        Output.bar(read_only_root_filesystem, data, "containers only have read-only root filesystem in all running", \
+        Output.bar(run_as_non_root, data, \
+        "containers are having non_root_user in running", k8s_object, Output.GREEN)
+        Output.bar(read_only_root_filesystem, data, \
+        "containers only have read-only root filesystem in all running", \
         k8s_object, Output.GREEN)
-        Output.print_table(data,headers,v)
-        return data
+        Output.print_table(data, headers, v)
+
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "privileged_esc": i[3],\
+                "privilged": i[4], "read_only_fs": i[5], "run_as_non_root": i[6], \
+                "run_as_user": i[7] } for i in data]    
+
+        return json.dumps(json_data)
 
     # check health probes defined
-    def health_probes(k8s_object, k8s_object_list,headers,v):
+    def health_probes(k8s_object, k8s_object_list, headers, v):
         data, config_not_defined, readiness_probe, liveness_probe, both = \
         [], [], [], [], []
         for item in k8s_object_list.items:
@@ -139,20 +149,30 @@ class Check:
                     container.name, u'\u2717', u'\u2717'])
                     config_not_defined.append(False)
 
-        print ("\nhealth_check definition: {} {}".format(len(k8s_object_list.items), k8s_object))
-        Output.bar(config_not_defined,data, "containers found with no health-check in running", \
+        print ("\nhealth_check definition: {} {}"\
+        .format(len(k8s_object_list.items), k8s_object))
+        Output.bar(config_not_defined,data, \
+        "containers found with no health-check in running", \
         k8s_object, Output.RED)
-        Output.bar(liveness_probe, data, "containers found with only liveness probe defined in running", \
+        Output.bar(liveness_probe, data, \
+        "containers found with only liveness probe defined in running", \
         k8s_object, Output.YELLOW)
-        Output.bar(readiness_probe, data, "containers found with only readiness probe defined in running", \
+        Output.bar(readiness_probe, data, \
+        "containers found with only readiness probe defined in running", \
         k8s_object, Output.YELLOW)
-        Output.bar(both, data, "containers found having both liveness and readiness probe defined in running", k8s_object, \
-        Output.GREEN)
-        Output.print_table(data,headers,v)
-        return data
+        Output.bar(both, data, \
+        "containers found having both liveness and readiness probe defined in running", 
+        k8s_object, Output.GREEN)
+        Output.print_table(data, headers, v)
+
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "readiness_probe": i[3],\
+                "liveness_probe": i[4]} for i in data]    
+
+        return json.dumps(json_data)
 
     # check resource requests/limits
-    def resources(k8s_object, k8s_object_list,headers,v):
+    def resources(k8s_object, k8s_object_list, headers, v):
         data, config_not_defined, limits, requests, both = [], [], [], [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -182,29 +202,38 @@ class Check:
                     config_not_defined.append(False)
         print ("\nresource definition: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
-        Output.bar(config_not_defined,data, "containers found without resources defined in running", \
+        Output.bar(config_not_defined,data, \
+        "containers found without resources defined in running", \
         k8s_object, Output.RED)
-        Output.bar(requests,data, "containers found with only requests defined in running", k8s_object, \
-        Output.YELLOW)
-        Output.bar(limits,data, "containers found with only limits defined in running",k8s_object, \
-        Output.YELLOW)
-        Output.bar(both,data, "containers found with both limits and requests defined in running", k8s_object, \
-        Output.GREEN)
-        Output.print_table(data,headers,v)
-        return data
+        Output.bar(requests,data, \
+        "containers found with only requests defined in running", 
+        k8s_object, Output.YELLOW)
+        Output.bar(limits,data, \
+        "containers found with only limits defined in running", \
+        k8s_object, Output.YELLOW)
+        Output.bar(both,data, \
+        "containers found with both limits and requests defined in running", \
+        k8s_object, Output.GREEN)
+        Output.print_table(data, headers, v)
+
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "container": i[2], "limits": i[3],\
+                "requests": i[4]} for i in data]    
+
+        return json.dumps(json_data)
 
     # check for rollout strategy
-    def strategy(k8s_object, k8s_object_list,headers,v):
+    def strategy(k8s_object, k8s_object_list, headers, v):
         data = []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
             if item.spec.strategy is not None:
                 data.append([item.metadata.name, item.spec.strategy.type])
-        Output.print_table(data,headers,v)
+        Output.print_table(data, headers, v)
         return data
 
     # check for single replica
-    def replica(k8s_object, k8s_object_list,headers,v):
+    def replica(k8s_object, k8s_object_list, headers, v):
         data, single_replica_count = [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -217,12 +246,12 @@ class Check:
         if len(single_replica_count) > 0:
             print ("\nsingle replica check: {} {}".format(len(k8s_object_list.items), \
             k8s_object))
-            Output.bar(single_replica_count, data, str(k8s_object) + ' are running with 1 replica in all', \
-            k8s_object, Output.RED)
-            Output.print_table(data,headers,v)
+            Output.bar(single_replica_count, data, str(k8s_object) + \
+            ' are running with 1 replica in all', k8s_object, Output.RED)
+            Output.print_table(data, headers, v)
             return data
 
-    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list,headers,v):
+    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v):
         data = []
         affinity, node_selector, toleration = "", "", ""
         for item in k8s_object_list.items:
@@ -256,10 +285,15 @@ class Check:
                 affinity = u'\u2717'
             data.append([item.metadata.namespace, k8s_object_name, \
             node_selector, toleration, affinity, priority_class_name])
-        Output.print_table(data,headers,v)
-        return data
+        Output.print_table(data, headers, v)
 
-    def qos(k8s_object, k8s_object_list,headers,v):
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "node_selector": i[2], \
+        "tolerations": i[3], "affinity": i[4], "priority_class": i[5]} for i in data]    
+
+        return json.dumps(json_data)
+
+    def qos(k8s_object, k8s_object_list, headers, v):
         data, guaranteed, besteffort, burstable = [], [], [], []
         if not k8s_object_list: return
         for item in k8s_object_list.items:
@@ -274,16 +308,20 @@ class Check:
 
         print ("\nQoS check: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
-        Output.bar(guaranteed, data, str(k8s_object) + ' are having Guaranteed QoS out of all', k8s_object, \
-        Output.GREEN)
-        Output.bar(burstable, data, str(k8s_object) + ' are having Burstable QoS out of all', k8s_object, \
-        Output.YELLOW)
-        Output.bar(besteffort, data, str(k8s_object) + ' are having BestEffort QoS out of all', k8s_object, \
-        Output.RED)
-        Output.print_table(data,headers,v)
-        return data
+        Output.bar(guaranteed, data, str(k8s_object) + \
+        ' are having Guaranteed QoS out of all', k8s_object, Output.GREEN)
+        Output.bar(burstable, data, str(k8s_object) + \
+        ' are having Burstable QoS out of all', k8s_object, Output.YELLOW)
+        Output.bar(besteffort, data, str(k8s_object) + \
+        ' are having BestEffort QoS out of all', k8s_object, Output.RED)
+        Output.print_table(data, headers, v)
 
-    def image_pull_policy(k8s_object, k8s_object_list,headers,v):
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "qos": i[2]} for i in data]    
+
+        return json.dumps(json_data)
+
+    def image_pull_policy(k8s_object, k8s_object_list, headers, v):
         data, if_not_present, always, never= [], [], [], []
         config = 'image pull-policy'
         for item in k8s_object_list.items:
@@ -305,14 +343,22 @@ class Check:
 
         print ("\n{}: {} {}".format(config, len(k8s_object_list.items), \
         k8s_object))        
-        Output.bar(if_not_present, data, 'containers have "IfNotPresent" image pull-policy in all', \
+        Output.bar(if_not_present, data, \
+        'containers have "IfNotPresent" image pull-policy in all', \
         k8s_object, Output.YELLOW)
-        Output.bar(always, data, 'containers have "Always" image pull-policy in all', \
+        Output.bar(always, data, \
+        'containers have "Always" image pull-policy in all', \
         k8s_object, Output.GREEN)
-        Output.bar(never, data, 'containers have "Never" image pull-policy in all', \
+        Output.bar(never, data, \
+        'containers have "Never" image pull-policy in all', \
         k8s_object, Output.RED)
-        Output.print_table(data,headers,v)
-        return data
+        Output.print_table(data, headers, v)
+
+        # generating json_data for reporting
+        json_data = [{"namespace": i[0], "pod": i[1], "image": i[2], \
+        "image_pull_policy": i[3]} for i in data]    
+
+        return json.dumps(json_data)
 
 class IngCheck:
     # checking mapping of ingress
@@ -561,7 +607,7 @@ class Nodes:
             .format(latest_docker_version))
 
 class CRDs:
-    def check_ns_crd(k8s_object_list,k8s_object):
+    def check_ns_crd(k8s_object_list, k8s_object, data, headers, v):
         ns_crds, cluster_crds, other_crds = [], [], []
         for item in k8s_object_list.items:
             if 'Namespaced' in item.spec.scope:
@@ -578,4 +624,6 @@ class CRDs:
         Output.bar(cluster_crds, k8s_object_list.items, \
         'Cluster scope', k8s_object, Output.CYAN)
         Output.bar(other_crds, k8s_object_list.items, \
-        'Other scope', k8s_object, Output.CYAN)        
+        'Other scope', k8s_object, Output.CYAN)   
+
+        Output.print_table(data, headers, v)     
