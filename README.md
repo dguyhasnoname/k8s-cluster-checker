@@ -63,7 +63,7 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
 
 ## Pre-requisites
 
-1. python3 with below ![packages](requirements.txt):
+1. python3 with below [packages](requirements.txt):
     - pandas
     - kubernetes
     - argparse
