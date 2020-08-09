@@ -28,18 +28,21 @@ class CtrlPlane:
         for item in k8s_object_list.items:
             data.append([item.metadata.namespace, item.metadata.name, \
             item.spec.node_name])
-        data.append(['----------', '---', '---'])
+        data = k8s.Output.append_hyphen(data, '------------')
         data.append(["Total pods: ", len(data) - 1, ''])
         k8s.Output.print_table(data,headers,True)
 
     def check_ctrl_plane_security(v):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        k8s.Check.security_context(k8s_object, k8s_object_list, headers, v, namespace)
+        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_ctrl_plane_pods_health_probes(v):
-        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v, namespace)
+        headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', \
+        'LIVENESS_PROBE']        
+        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_ctrl_plane_pods_resources(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
@@ -68,13 +71,15 @@ class CtrlPlane:
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
                 './conf/kube-apiserver', headers, v)                
-                k8s.CtrlProp.check_admission_controllers(item.spec.containers[0].command, v, namespace)
+                k8s.CtrlProp.check_admission_controllers(\
+                item.spec.containers[0].command, v, namespace)
 
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
                 './conf/kube-scheduler', headers, v)  
-                k8s.CtrlProp.secure_scheduler_check(item.spec.containers[0].command)
+                k8s.CtrlProp.secure_scheduler_check(\
+                item.spec.containers[0].command)
             container_name_check = item.spec.containers[0].name
 
 def call_all(v):
@@ -112,7 +117,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

@@ -14,7 +14,8 @@ Before running script export KUBECONFIG file as env:
     export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
         epilog="""All's well that ends well.""")
     
-    parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
+    parser.add_argument('-v', '--verbose', type=str, \
+    help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
     args=parser.parse_args()
 
 class _Daemonset:
@@ -32,19 +33,26 @@ class _Daemonset:
     def check_damemonset_security(v):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v, namespace)
+        data = k8s.Check.security_context(k8s_object, k8s_object_list, \
+        headers, v, namespace)
 
     def check_damemonset_health_probes(v):
-        headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v, namespace)
+        headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', \
+        'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        data = k8s.Check.health_probes(k8s_object, k8s_object_list, \
+        headers, v, namespace)
 
     def check_damemonset_resources(v):
-        headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
+        headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', \
+        'LIMITS', 'REQUESTS']
+        data = k8s.Check.resources(k8s_object, k8s_object_list, \
+        headers, v, namespace)
 
     def check_damemonset_tolerations_affinity_node_selector_priority(v):  
-        headers = ['NAMESPACE', 'DAEMONSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
-        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v, namespace)
+        headers = ['NAMESPACE', 'DAEMONSET', 'NODE_SELECTOR', \
+        'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
+        data = k8s.Check.tolerations_affinity_node_selector_priority(\
+        k8s_object, k8s_object_list, headers, v, namespace)
 
 def call_all(v,ns):
     _Daemonset(ns)
@@ -55,9 +63,11 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
@@ -81,7 +91,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

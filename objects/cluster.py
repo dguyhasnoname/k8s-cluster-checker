@@ -31,7 +31,8 @@ class Cluster:
                 if 'clusterName' in item.data['ClusterConfiguration']:
                     cluster_name = re.search(r"clusterName: ([\s\S]+)controlPlaneEndpoint", \
                     item.data['ClusterConfiguration']).group(1)
-                    print (k8s.Output.BOLD + "\nCluster name: "+ k8s.Output.RESET + "{}".format(cluster_name))
+                    print (k8s.Output.BOLD + "\nCluster name: "+ \
+                    k8s.Output.RESET + "{}".format(cluster_name))
             else:
                 pass
         return cluster_name
@@ -57,26 +58,31 @@ class Cluster:
         # analysing security context from security_context function in modules/process.py
         k8s.Check.security_context('pods', cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
-        'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v, 'all')
+        'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], \
+        v, 'all')
 
         # analysing health checks from health_probes function in modules/process.py
         k8s.Check.health_probes('pods', cluster_pods_list, \
-        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v, 'all')
+        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], \
+        v, 'all')
 
         # analysing limit/requests from resources function in modules/process.py
         k8s.Check.resources('pods',cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, 'all')
 
         # analysing qos context from qos function in modules/process.py
-        k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], v, 'all')
+        k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], \
+        v, 'all')
 
         # analysing image_pull_policy from image_pull_policy function in modules/process.py
         k8s.Check.image_pull_policy('pods', cluster_pods_list, \
-        ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY'], v, 'all')
+        ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY'], \
+        v, 'all')
 
         # analysing services from get_service function in modules/process.py
         k8s.Service.get_service('services', cluster_svc_list, \
-        ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR'], v, 'all')
+        ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR'], \
+        v, 'all')
 
     # fetching control plane data from control_plane.py
     def get_ctrl_plane_data(v):
@@ -110,7 +116,8 @@ class Cluster:
                 df = pd.read_csv(f)
                 df.to_excel(writer, sheet_name=os.path.basename(f)[:31])
         writer.save()
-        print ("[INFO] {} reports generated for cluster {}".format(len(csv_list), cluster_name))
+        print ("[INFO] {} reports generated for cluster {}"\
+        .format(len(csv_list), cluster_name))
         print ("[INFO] Combined cluster report file: {}"\
         .format(combined_report_file))             
 
@@ -130,7 +137,8 @@ def call_all(v):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvr", ["help", "verbose", "report"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvr", ["help", "verbose", "report"])
         if not opts:        
             call_all("")
             
@@ -153,7 +161,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

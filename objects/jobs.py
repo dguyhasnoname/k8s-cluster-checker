@@ -11,6 +11,9 @@ class Jobs:
             ns = 'all' 
         namespace = ns   
         k8s_object_list = K8sJobs.get_jobs(ns)
+        if not len(k8s_object_list.items):
+            print ("[WARNING] No jobs found.")
+            sys.exit()
     global k8s_object
     k8s_object = 'jobs'
 
@@ -19,9 +22,9 @@ class Jobs:
         headers = ['NAMESPACE', 'JOBS']
         for item in k8s_object_list.items:
             data.append([item.metadata.namespace, item.metadata.name])
-        data.append(['----------', '---'])
+        data = k8s.Output.append_hyphen(data, '---------')
         data.append(["Total: " , len(data) - 1])
-        k8s.Output.print_table(data,headers,v)
+        k8s.Output.print_table(data, headers, True)
 
     def check_jobs_pod_security(v):
         headers = ['NAMESPACE', 'JOBS', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
@@ -83,7 +86,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

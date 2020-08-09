@@ -29,6 +29,14 @@ class Output:
             print (color + char, end="" + Output.RESET)
         print ("\n")
 
+    # function to append hyphen to print total of any object
+    def append_hyphen(data, hyphen):
+        temp_bar = []
+        [temp_bar.append(hyphen) for x in range(len(data[0]))]
+        data.append(temp_bar)
+
+        return data
+
     # remove unicode characters for reporting
     def remove_unicode(x):
         a = ['No' if v in [u'\u2717', None] else v for v in x]
@@ -641,18 +649,18 @@ class NameSpace:
         return data
 
 class Nodes:
+    global version_check
+    version_check = []
     # checking latest k8s version and comparing it with installed k8s version
     def get_latest_k8s_version(kubelet_version):
         ver = requests.get("https://storage.googleapis.com/kubernetes-release/release/stable.txt")
         latest_k8s_version = ver.text
         if version.parse(str(kubelet_version)) < version.parse(str(latest_k8s_version)):
-            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-            "Cluster is not running with latest kubernetes version: {}"\
-            .format(latest_k8s_version))
+            kubelet_version = Output.RED +  str(kubelet_version) + Output.RESET
         else:
-            print(Output.GREEN + "[OK] " + Output.RESET + \
-            "Cluster is running with latest kubernetes version: {}"\
-            .format(latest_k8s_version))
+            kubelet_version = Output.GREEN +  str(kubelet_version) + Output.RESET
+
+        return version_check.append(['K8S', latest_k8s_version, kubelet_version])
 
     # checking latest OS version and comparing it with installed OS version
     def get_latest_os_version(os):
@@ -663,31 +671,37 @@ class Nodes:
             current_os_version = os.split()[5]
 
             if version.parse(str(current_os_version)) < version.parse(str(latest_os_version[0][1])):
-                print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-                "Cluster nodes are not running on latest {}{}"\
-                .format(latest_os_version[0][0], latest_os_version[0][1]))
+                current_os_version = Output.RED +  str(current_os_version) + Output.RESET
             else:
-                print(Output.GREEN + "[OK] " + Output.RESET + \
-                "Cluster nodes are running on latest {}{}"\
-                .format(latest_os_version[0][0], latest_os_version[0][1]))
+                current_os_version = Output.GREEN +  str(current_os_version) + Output.RESET
         elif 'CoreOS' in os:
             print(Output.YELLOW + "[WARNING] " + Output.RESET + \
                 "Cluster nodes are running on CoreOS which is DPERECATED: https://coreos.com/os/eol/. " + \
                 "PLEASE CONSIDER CHANGING THE DEPRECATED COREOS!")
-        return [latest_os_version, current_os_version]
+
+        return version_check.append(['OS', latest_os_version[0][1], current_os_version])
 
     # checking latest docker version and comparing it with installed docker version
     def get_latest_docker_version(docker_version):
         ver = requests.get("https://api.github.com/repositories/7691631/releases/latest")
         latest_docker_version = ver.json()['tag_name']
         if version.parse(str(docker_version)) < version.parse(str(latest_docker_version)):
-            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-            "Cluster nodes are not running on latest docker version: {}"\
-            .format(latest_docker_version))
+            docker_version = Output.RED +  str(docker_version) +  Output.RESET
         else:
-            print(Output.GREEN + "[OK] " + Output.RESET + \
-            "Cluster nodes are running on latest docker version: {}"\
-            .format(latest_docker_version))
+            docker_version = Output.GREEN +  str(docker_version) +  Output.RESET
+
+        return version_check.append(['DOCKER', latest_docker_version, docker_version])
+
+    def node_version_check(current_os_version, docker_version, kubelet_version):
+        headers = ['VERSION', 'LATEST', 'INSTALLED']
+        Nodes.get_latest_os_version(current_os_version)
+        Nodes.get_latest_docker_version(docker_version)
+        Nodes.get_latest_k8s_version(kubelet_version)
+        Output.print_table(version_check, headers, True)
+        Output.csv_out(version_check, headers, 'node', 'version', '')
+        json_data = Output.json_out(version_check, headers, 'node', 'version', '')
+
+        return json_data
 
 class CRDs:
     def check_ns_crd(k8s_object_list, k8s_object, data, headers, v, ns):

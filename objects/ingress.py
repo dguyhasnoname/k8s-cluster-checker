@@ -14,7 +14,8 @@ class _Ingress:
         namespace = ns
         k8s_object_list = K8sIngress.get_ingress(ns)
         if not k8s_object_list: 
-            print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + "No ingress found!")
+            print(k8s.Output.RED + "[ERROR] " \
+            + k8s.Output.RESET + "No ingress found!")
             sys.exit()
  
     global k8s_object
@@ -33,14 +34,15 @@ class _Ingress:
             if ing_count: data.append([ns.metadata.name, ing_count])
         for i in data:
             total_ing = total_ing + i[1]
-        data.append(['----------', '---'])
+        data = k8s.Output.append_hyphen(data, '-------')
         data.append(["Total: " , total_ing])
         k8s.Output.print_table(data,headers,True)
 
     def list_ingress(v):
         data = []
         headers = ['NAMESPACE', 'INGRESS', 'RULES', 'HOST [SERVICE:PORT]']
-        k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, headers, v, namespace)
+        k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, \
+        headers, v, namespace)
 
 def call_all(v,ns):
     _Ingress(ns)
@@ -49,7 +51,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)
@@ -76,7 +79,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

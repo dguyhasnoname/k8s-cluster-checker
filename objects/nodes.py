@@ -9,7 +9,7 @@ class _Nodes:
     k8s_object = 'nodes'
 
     def get_nodes_details(v):
-        data = []
+        data, temp_bar = [], []
         headers = ['NODE_NAME', 'K8S_VERSION', 'ROLE', 'NODE_CPU', 'NODE_MEM_GB', \
         'VOLUMES_USED/ATTACHED', 'POD_CIDR', 'OS_NAME', 'DOCKER_VERSION', 'INSTANCE_TYPE', 'REGION']
         for item in k8s_object_list.items:
@@ -53,8 +53,8 @@ class _Nodes:
             node_memory_gb, volumes, item.spec.pod_cidr, item.status.node_info.os_image, \
             docker_version, instance_type, region, volumes_used, volumes_attached])
             
-        k8s.Output.csv_out(data, headers, 'nodes', 'nodes', 'all')
-        k8s.Output.json_out(data, headers, 'nodes', 'nodes', 'all')
+        k8s.Output.csv_out(data, headers, 'nodes', 'detail', '')
+        k8s.Output.json_out(data, headers, 'nodes', 'detail', '')
         total_cpu, total_mem, masters, nodes, etcd, others, \
         total_vol = 0, 0, 0, 0, 0, 0, 0
         for i in data:
@@ -67,13 +67,15 @@ class _Nodes:
             if i[11] != u'\u2717': total_vol += i[11]
 
         total_nodes = 'total:  ' + str(masters+nodes+etcd+others)
-        node_types = 'masters: ' + str(masters) + "\n" + 'worker:  ' + str(nodes) + "\n" +\
-         'etcd:    ' + str(etcd) + "\n" + "others:  " + str(others)
-        data.append(['----------', '-----', '----------', '-----', '-----', '-----', \
-        '-----', '-----', '-----', '-----', '-----', '', ''])
+        node_types = 'masters: ' + str(masters) + "\n" + 'worker:  ' \
+        + str(nodes) + "\n" + 'etcd:    ' + str(etcd) + "\n" + \
+        "others:  " + str(others)
+        data = k8s.Output.append_hyphen(data, '----------')
+
         data.append([total_nodes, item.status.node_info.kubelet_version, \
         node_types, total_cpu, f'{round(total_mem, 2)}GB', total_vol, u'\u2717', \
-        item.status.node_info.os_image, docker_version, u'\u2717', u'\u2717', '', ''])
+        item.status.node_info.os_image, docker_version, u'\u2717', \
+        u'\u2717', '', ''])
         if v:
             k8s.Output.print_table(data,headers,v)
         else:
@@ -81,13 +83,15 @@ class _Nodes:
             for i in data[-1:]:
                 short_data = [[i[2], i[1], i[3], i[4], i[7], i[8], i[5]]]
                 short_data.append(['----------', '', '', '', '', '', ''])
-                short_data.append(['total:   ' + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
-            headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', 'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
+                short_data.append(['total:   ' \
+                + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
+            headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', \
+            'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
             k8s.Output.print_table(short_data,headers,True)
 
-        k8s.Nodes.get_latest_os_version(item.status.node_info.os_image)
-        k8s.Nodes.get_latest_docker_version(docker_version)
-        k8s.Nodes.get_latest_k8s_version(item.status.node_info.kubelet_version)
+        print ("[INFO] Checking for latest and installed versions...")
+        k8s.Nodes.node_version_check(item.status.node_info.os_image, \
+        docker_version, item.status.node_info.kubelet_version)
 
 def call_all(v):
     _Nodes.get_nodes_details(v)
@@ -118,7 +122,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

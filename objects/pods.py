@@ -32,10 +32,6 @@ class _Pods:
         k8s_object_list = K8sPods.get_pods(ns) 
     global k8s_object
     k8s_object = 'pods'
-    # with alive_bar(100, bar = 'bubbles') as bar:
-    #     for i in range(100):
-    #         k8s_object_list = get_pods()
-    #         bar()
 
     def get_namespaced_pod_list(v):
         data = []
@@ -53,7 +49,8 @@ class _Pods:
         v, namespace)
 
     def check_pod_health_probes(v):
-        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']
+        headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', \
+        'LIVENESS_PROBE']
         k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
         v, namespace)
 
@@ -114,7 +111,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

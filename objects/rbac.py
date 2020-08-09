@@ -32,9 +32,11 @@ class ClusterRBAC:
         ns_role_binding_list = tmp_ns_role_binding_list.result()
 
     def get_rbac_count():
-        headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', 'ROLE_BINDING']
-        k8s.Output.print_table([[len(cluster_role_list.items), len(cluster_role_binding_list.items), \
-        len(ns_role_list.items), len(ns_role_binding_list.items)]], headers, True) 
+        headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', \
+        'ROLE_BINDING']
+        k8s.Output.print_table([[len(cluster_role_list.items), \
+        len(cluster_role_binding_list.items), len(ns_role_list.items), \
+        len(ns_role_binding_list.items)]], headers, True) 
        
     def get_cluster_role(v):
         k8s_object = "clusteroles"
@@ -49,7 +51,7 @@ class ClusterRBAC:
             else:
                 data.append([item.metadata.name, "-", "-", "-", "-"])
         k8s.Rbac.analyse_role(data, headers, k8s_object, 'all') 
-        data.append(['----------', '---', '---', '---', '---'])
+        data = k8s.Output.append_hyphen(data, '-----------')
         data.append(["Total: " + str(len(cluster_role_list.items)), \
         rules[3], "-", "-", "-"])
         k8s.Output.print_table(data,headers,v)
@@ -66,12 +68,13 @@ class ClusterRBAC:
                     i.name, i.namespace])
             else:
                 data.append([item.metadata.name, item.role_ref.name, '', ''])
-        data.append(['----------', '---', '---', '---'])
+        data = k8s.Output.append_hyphen(data, '-----------')
         data.append(["Total: " + str(len(cluster_role_binding_list.items)), \
         "-", "-", "-"])
         k8s.Output.print_table(data,headers,v)
         k8s.Output.csv_out(data, headers, 'rbac', 'cluster_role_binding', 'all')
-        json_data = k8s.Output.json_out(data, headers, 'rbac', 'cluster_role_binding', 'all')          
+        json_data = k8s.Output.json_out(data, headers, 'rbac', \
+        'cluster_role_binding', 'all')          
 
     def get_ns_role(v):    
         data = []
@@ -86,7 +89,7 @@ class ClusterRBAC:
                 data.append([item.metadata.name, item.metadata.namespace, \
                 "-", "-", "-", "-"])
         k8s.Rbac.analyse_role(data, headers, k8s_object, namespace)
-        data.append(['----------', '---', '---', '---', '---', '---'])
+        data = k8s.Output.append_hyphen(data, '---------')
         data.append(["Total: " + str(len(ns_role_list.items)), \
         "-", "-", "-",  "-", "-"])          
         k8s.Output.print_table(data,headers,v)
@@ -107,12 +110,13 @@ class ClusterRBAC:
             else:
                 data.append([item.metadata.name, item.metadata.namespace, \
                 item.role_ref.name, 'None'])
-        data.append(['----------', '---', '---', '---'])
+        data = k8s.Output.append_hyphen(data, '---------')
         data.append(["Total: " + str(len(ns_role_binding_list.items)), \
         "-", "-", "-"]) 
         k8s.Output.print_table(data,headers,v)
         k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding', namespace)
-        json_data = k8s.Output.json_out(data, headers, 'rbac', 'ns_role_binding', namespace)    
+        json_data = k8s.Output.json_out(data, headers, 'rbac', \
+        'ns_role_binding', namespace)    
 
 def call_all(v,ns):
     ClusterRBAC(ns)
@@ -153,7 +157,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " + \
+        k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

@@ -16,19 +16,22 @@ class _Service:
     k8s_object = 'services'
 
     def list_service(v):
-        headers = ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR']
-        data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, v, namespace)
-        data.append(['----------', '---', '---', '---', '---'])
+        headers = ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', \
+        'SELECTOR']
+        data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, \
+        v, namespace)
+        data = k8s.Output.append_hyphen(data, '---------')
         data.append(["Total: " , len(data) - 1 , '-', '-', '-'])
         k8s.Output.print_table(data, headers, v)
-s
+
 def call_all(v,ns):
     _Service(ns)
     _Service.list_service(v)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", \
+        ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)
@@ -55,7 +58,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

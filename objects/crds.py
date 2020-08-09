@@ -1,4 +1,3 @@
-import modules.message
 import sys, time, os, getopt, argparse, re, itertools
 start_time = time.time()
 from modules import process as k8s
@@ -30,11 +29,12 @@ class _CRDs:
                     count_crd_group_crds += 1
             i.append(count_crd_group_crds)
 
-        crd_group.append(['-----------', '----'])
+        crd_group = k8s.Output.append_hyphen(crd_group, '---------')
         crd_group.append(['Total: ' + str(len(crd_group) - 1), len(data)])
 
         k8s.Output.print_table(crd_group, headers, True)
-        k8s.CRDs.check_ns_crd(k8s_object_list, k8s_object, data, headers, v, 'all')
+        k8s.CRDs.check_ns_crd(k8s_object_list, k8s_object, data, \
+        headers, v, 'all')
 
         return data
 
@@ -43,7 +43,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)
@@ -70,7 +71,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:

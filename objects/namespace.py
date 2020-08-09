@@ -30,20 +30,27 @@ class Namespace:
             if not 'services' in k8s_object:
                 k8s.Check.security_context(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
-                'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v, ns)
-                k8s.Check.health_probes(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v, ns)
-                k8s.Check.resources(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, ns)
+                'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', \
+                'RUNA_AS_USER'], v, ns)
 
-                if k8s_object in ['deployments','statefulsets']: \
-                k8s.Check.replica(k8s_object +  'ns', k8s_object_list, \
-                ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v, ns)
+                k8s.Check.health_probes(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', \
+                'LIVENESS_PROBE'], v, ns)
+
+                k8s.Check.resources(k8s_object, k8s_object_list, \
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], \
+                v, ns)
+
+                if k8s_object in ['deployments','statefulsets']: 
+                    k8s.Check.replica(k8s_object +  'ns', k8s_object_list, \
+                    ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v, ns)
             else:
                 k8s.Service.get_service(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR'], v, ns)
+                ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', \
+                'SELECTOR'], v, ns)
         else:
-            print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
+            print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + \
+            "No {} found!".format(k8s_object))
 
     def get_ns_data(v,ns):
         data, sum_list, empty_ns = [], [], []
@@ -63,7 +70,8 @@ class Namespace:
             temp_ingress = executor.submit(K8sIngress.get_ingress, ns)
             temp_jobs = executor.submit(K8sJobs.get_jobs, ns)
             temp_role = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
-            temp_role_binding = executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
+            temp_role_binding = \
+            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
 
         # stroing data from threads ran above
         deployments = temp_deploy.result()
@@ -103,22 +111,30 @@ class Namespace:
 
         # calculating cluster-wide count of objects if namespace is no provided
         if type(ns_list) != str:
-            data.append(['----------', '---', '---', '---', '---','---', '---', '---', '---', '---'])
-            data.append(["Total: " + str(total_ns), total_deploy, total_ds, total_sts, \
-            total_pods, total_svc, total_ing, total_jobs, total_roles,total_role_bindings ])
+            data = k8s.Output.append_hyphen(data, '--------')
+            data.append(["Total: " + str(total_ns), total_deploy, total_ds, 
+            total_sts, total_pods, total_svc, total_ing, total_jobs, \
+            total_roles,total_role_bindings ])
                     
-        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', 'PODS', 'SERVICE', 'INGRESS', 'JOBS', 'ROLES', 'ROLE_BINDINGS'] 
+        headers = ['NAMESPACE', 'DEPLOYMENTS', 'DAEMONSETS', 'STATEFULSETS', \
+        'PODS', 'SERVICE', 'INGRESS', 'JOBS', 'ROLES', 'ROLE_BINDINGS'] 
         k8s.Output.print_table(data,headers,True)
 
         # get namespace wise object details. Will give output in verbose mode
         def get_all_object_data(ns,v):
-            print (k8s.Output.BOLD + "\nNamespace: " + k8s.Output.RESET  + "{}".format(ns))
+            print (k8s.Output.BOLD + "\nNamespace: " + \
+            k8s.Output.RESET  + "{}".format(ns))
 
-            Namespace.get_object_data(K8sDeploy.get_deployments(ns), 'deployments', ns, v)
-            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), 'damemonsets', ns, v)
-            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), 'statefulsets', ns, v)
-            Namespace.get_object_data(K8sJobs.get_jobs(ns), 'jobs', ns, v)
-            Namespace.get_object_data(K8sService.get_svc(ns),'services', ns, v)
+            Namespace.get_object_data(K8sDeploy.get_deployments(ns), \
+            'deployments', ns, v)
+            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), \
+            'damemonsets', ns, v)
+            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), \
+            'statefulsets', ns, v)
+            Namespace.get_object_data(K8sJobs.get_jobs(ns), \
+            'jobs', ns, v)
+            Namespace.get_object_data(K8sService.get_svc(ns), \
+            'services', ns, v)
 
         if v:
             if type(ns_list) != str:
@@ -133,7 +149,8 @@ class Namespace:
         if len(empty_ns) > 0:
             k8s.Output.separator(k8s.Output.GREEN, '-')
             print (k8s.Output.YELLOW + "\n[WARNING] " + k8s.Output.RESET + \
-            "Below {} namespaces have no workloads running: ".format(len(empty_ns)))
+            "Below {} namespaces have no workloads running: "\
+            .format(len(empty_ns)))
             k8s.Output.print_table(empty_ns,headers,True)
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
@@ -143,7 +160,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)
@@ -170,7 +188,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + 'Interrupted from keyboard!')
+        print(k8s.Output.RED + "[ERROR] " \
+        + k8s.Output.RESET + 'Interrupted from keyboard!')
         try:
             sys.exit(0)
         except SystemExit:
