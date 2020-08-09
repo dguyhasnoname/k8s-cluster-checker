@@ -9,8 +9,8 @@ core = client.CoreV1Api()
 
 class CtrlPlane:
     global k8s_object, k8s_object_list, namespace
+    namespace = 'kube-system'
     def check_ctrl_plane_pods():
-        namespace = 'kube-system'
         try:
             print ("\n[INFO] Fetching control plane workload data...")
             ctrl_plane_pods = core.list_namespaced_pod(namespace, \
@@ -35,25 +35,25 @@ class CtrlPlane:
     def check_ctrl_plane_security(v):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.security_context(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_ctrl_plane_pods_health_probes(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_ctrl_plane_pods_resources(v):
         headers = ['NAMESPACE', 'PODS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
 
     # gets file name from check_ctrl_plane_pods_properties function
-    def check_ctrl_plane_pods_properties_operation(item,filename,headers,v):
+    def check_ctrl_plane_pods_properties_operation(item, filename, headers, v):
         commands = item.spec.containers[0].command
         data = k8s.CtrlProp.compare_properties(filename, commands)
-        k8s.Output.print_table(data,headers,v)
+        k8s.Output.print_table(data, headers, v)
 
     def check_ctrl_plane_pods_qos(v):
         headers = ['NAMESPACE', 'POD', 'QoS']
-        data = k8s.Check.qos(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.qos(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_ctrl_plane_pods_properties(v):
         container_name_check = ""
@@ -62,18 +62,18 @@ class CtrlPlane:
             if item.spec.containers[0].name in "kube-controller-manager" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-controller-manager',headers,v)
+                './conf/kube-controller-manager', headers, v)
 
             elif item.spec.containers[0].name in "kube-apiserver" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-apiserver',headers,v)                
-                k8s.CtrlProp.check_admission_controllers(item.spec.containers[0].command,v)
+                './conf/kube-apiserver', headers, v)                
+                k8s.CtrlProp.check_admission_controllers(item.spec.containers[0].command, v, namespace)
 
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-scheduler',headers,v)  
+                './conf/kube-scheduler', headers, v)  
                 k8s.CtrlProp.secure_scheduler_check(item.spec.containers[0].command)
             container_name_check = item.spec.containers[0].name
 
@@ -90,6 +90,8 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
         if not opts:        
             call_all(False)
+            k8s.Output.time_taken(start_time)
+            sys.exit()
             
     except getopt.GetoptError as err:
         print(err)

@@ -19,10 +19,11 @@ Before running script export KUBECONFIG file as env:
 
 class _Daemonset:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
             ns = 'all'
+        namespace = ns
         k8s_object_list = K8sDaemonSet.get_damemonsets(ns) 
   
     global k8s_object
@@ -31,19 +32,19 @@ class _Daemonset:
     def check_damemonset_security(v):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
+        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_damemonset_health_probes(v):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)
+        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_damemonset_resources(v):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
+        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_damemonset_tolerations_affinity_node_selector_priority(v):  
         headers = ['NAMESPACE', 'DAEMONSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
-        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v)
+        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v, namespace)
 
 def call_all(v,ns):
     _Daemonset(ns)

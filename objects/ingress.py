@@ -7,10 +7,11 @@ start_time = time.time()
 
 class _Ingress:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
             ns = 'all' 
+        namespace = ns
         k8s_object_list = K8sIngress.get_ingress(ns)
         if not k8s_object_list: 
             print(k8s.Output.RED + "[ERROR] " + k8s.Output.RESET + "No ingress found!")
@@ -39,7 +40,7 @@ class _Ingress:
     def list_ingress(v):
         data = []
         headers = ['NAMESPACE', 'INGRESS', 'RULES', 'HOST [SERVICE:PORT]']
-        data = k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, headers, v)
+        k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, headers, v, namespace)
 
 def call_all(v,ns):
     _Ingress(ns)

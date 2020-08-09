@@ -6,10 +6,11 @@ start_time = time.time()
 
 class _Sts:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
             ns = 'all'
+        namespace = ns
         k8s_object_list = K8sStatefulSet.get_sts(ns)    
     global k8s_object
     k8s_object = 'statefulsets'
@@ -17,19 +18,26 @@ class _Sts:
     def check_sts_security(v):
         headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_sts_health_probes(v):
-        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)
+        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', \
+        'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_sts_resources(v):
-        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
+        headers = ['NAMESPACE', 'STATEFULSET', 'CONTAINER_NAME', \
+        'LIMITS', 'REQUESTS']
+        k8s.Check.resources(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_sts_tolerations_affinity_node_selector_priority(v):  
-        headers = ['NAMESPACE', 'STATEFULSET', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
-        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v)
+        headers = ['NAMESPACE', 'STATEFULSET', 'NODE_SELECTOR', \
+        'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
+        k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
+        k8s_object_list, headers, v, namespace)
 
 def call_all(v,ns):
     _Sts(ns)
@@ -40,7 +48,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)

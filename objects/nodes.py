@@ -53,9 +53,10 @@ class _Nodes:
             node_memory_gb, volumes, item.spec.pod_cidr, item.status.node_info.os_image, \
             docker_version, instance_type, region, volumes_used, volumes_attached])
             
-        k8s.Output.csv_out(data, headers, 'nodes', 'nodes')
-        json_data = k8s.Output.json_out(data, headers, 'nodes', 'nodes')
-        total_cpu, total_mem, masters, nodes, etcd, others, total_vol = 0, 0, 0, 0, 0, 0, 0
+        k8s.Output.csv_out(data, headers, 'nodes', 'nodes', 'all')
+        k8s.Output.json_out(data, headers, 'nodes', 'nodes', 'all')
+        total_cpu, total_mem, masters, nodes, etcd, others, \
+        total_vol = 0, 0, 0, 0, 0, 0, 0
         for i in data:
             total_cpu += int(i[3])
             total_mem += i[4]

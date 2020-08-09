@@ -15,15 +15,17 @@ Before running script export KUBECONFIG file as env:
     export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
         epilog="""All's well that ends well.""")
     
-    parser.add_argument('-v', '--verbose', type=str, help="verbose mode. Use this flag to get kube-system namespace deployment details.")
+    parser.add_argument('-v', '--verbose', type=str, \
+    help="verbose mode. Use this flag to get kube-system namespace deployment details.")
     args=parser.parse_args()
 
 class _Deployment:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
             ns = 'all'
+        namespace = ns
         k8s_object_list = K8sDeploy.get_deployments(ns)
 
     global k8s_object
@@ -32,27 +34,33 @@ class _Deployment:
     def check_deployment_security(v):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_deployment_health_probes(v):
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)  
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', \
+        'READINESS_PROPBE', 'LIVENESS_PROBE']        
+        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace)  
 
     def check_deployment_resources(v): 
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'LIMITS', \
+        'REQUESTS']       
+        k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_deployment_strategy(v): 
         headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'STRATEGY_TYPE']
-        data = k8s.Check.strategy(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.strategy(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_replica(v): 
         headers = ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT']
-        data = k8s.Check.replica(k8s_object, k8s_object_list, headers, v)         
+        k8s.Check.replica(k8s_object, k8s_object_list, headers, v, namespace)         
 
     def check_deployment_tolerations_affinity_node_selector_priority(v): 
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']     
-        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v)       
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'NODE_SELECTOR', 'TOLERATIONS', \
+        'AFFINITY', 'PRIORITY_CLASS']     
+        k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
+        k8s_object_list, headers, v, namespace)       
 
 def call_all(v,ns):
     _Deployment(ns)
@@ -65,7 +73,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", \
+        "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)

@@ -5,10 +5,11 @@ from modules.get_jobs import K8sJobs
 
 class Jobs:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
-            ns = 'all'    
+            ns = 'all' 
+        namespace = ns   
         k8s_object_list = K8sJobs.get_jobs(ns)
     global k8s_object
     k8s_object = 'jobs'
@@ -20,38 +21,45 @@ class Jobs:
             data.append([item.metadata.namespace, item.metadata.name])
         data.append(['----------', '---'])
         data.append(["Total: " , len(data) - 1])
-        k8s.Output.print_table(data,headers,True)
+        k8s.Output.print_table(data,headers,v)
 
     def check_jobs_pod_security(v):
         headers = ['NAMESPACE', 'JOBS', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, v)
+        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace)
 
     def check_jobs_pod_health_probes(v):
-        headers = ['NAMESPACE', 'JOBS', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, v)  
+        headers = ['NAMESPACE', 'JOBS', 'CONTAINER_NAME', 'READINESS_PROPBE', \
+        'LIVENESS_PROBE']        
+        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace)  
 
     def check_jobs_pod_resources(v): 
         headers = ['NAMESPACE', 'JOBS', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']       
-        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, v)         
+        k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)         
 
     def check_jobs_pod_tolerations_affinity_node_selector_priority(v): 
-        headers = ['NAMESPACE', 'JOBS', 'NODE_SELECTOR', 'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']     
-        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v)
+        headers = ['NAMESPACE', 'JOBS', 'NODE_SELECTOR', 'TOLERATIONS', \
+        'AFFINITY', 'PRIORITY_CLASS']     
+        k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
+        k8s_object_list, headers, v, namespace)
 
 def call_all(v,ns):
     Jobs(ns)
-    Jobs.list_jobs(v)
     Jobs.check_jobs_pod_security(v)
     Jobs.check_jobs_pod_health_probes(v)
     Jobs.check_jobs_pod_resources(v)
     Jobs.check_jobs_pod_tolerations_affinity_node_selector_priority(v)
+    Jobs.list_jobs(v)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:", \
+        ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
+            k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:

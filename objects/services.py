@@ -6,21 +6,22 @@ start_time = time.time()
 
 class _Service:
     def __init__(self,ns):
-        global k8s_object_list
+        global k8s_object_list, namespace
         self.ns = ns
         if not ns:
             ns = 'all'
+        namespace = ns
         k8s_object_list = K8sService.get_svc(ns)    
     global k8s_object
     k8s_object = 'services'
 
     def list_service(v):
-        headers = ['NAMESPACE', 'SERVICE', 'CLUSTER_IP', 'SELECTOR']
-        data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, v)
-        data.append(['----------', '---', '---', '---'])
-        data.append(["Total: " , len(data) - 1 , '-', '-'])
+        headers = ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR']
+        data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, v, namespace)
+        data.append(['----------', '---', '---', '---', '---'])
+        data.append(["Total: " , len(data) - 1 , '-', '-', '-'])
         k8s.Output.print_table(data, headers, v)
-
+s
 def call_all(v,ns):
     _Service(ns)
     _Service.list_service(v)

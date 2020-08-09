@@ -30,18 +30,18 @@ class Namespace:
             if not 'services' in k8s_object:
                 k8s.Check.security_context(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
-                'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v)
+                'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], v, ns)
                 k8s.Check.health_probes(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v)
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], v, ns)
                 k8s.Check.resources(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v)
+                ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, ns)
 
-                if k8s_object in ['deployments','statefulsets','jobs']: \
+                if k8s_object in ['deployments','statefulsets']: \
                 k8s.Check.replica(k8s_object +  'ns', k8s_object_list, \
-                ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v)
+                ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v, ns)
             else:
                 k8s.Service.get_service(k8s_object, k8s_object_list, \
-                ['NAMESPACE', 'SERVICE', 'CLUSTER_IP', 'SELECTOR'], v)
+                ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR'], v, ns)
         else:
             print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + "No {} found!".format(k8s_object))
 

@@ -7,17 +7,24 @@ K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class ClusterRBAC:
     def __init__(self,ns):
+        global namespace
         self.ns = ns
         if not ns:
             ns = 'all'
+        namespace = ns
 
         # pulling rbac data in threads for fast execution
-        global cluster_role_list, cluster_role_binding_list, ns_role_list, ns_role_binding_list
+        global cluster_role_list, cluster_role_binding_list, ns_role_list, \
+        ns_role_binding_list
         with ThreadPoolExecutor(max_workers=5) as executor:      
-            tmp_cluster_role_list = executor.submit(K8sClusterRole.list_cluster_role)
-            tmp_cluster_role_binding_list = executor.submit(K8sClusterRoleBinding.list_cluster_role_binding)
-            tmp_ns_role_list = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
-            tmp_ns_role_binding_list = executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
+            tmp_cluster_role_list = \
+            executor.submit(K8sClusterRole.list_cluster_role)
+            tmp_cluster_role_binding_list = \
+            executor.submit(K8sClusterRoleBinding.list_cluster_role_binding)
+            tmp_ns_role_list = \
+            executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
+            tmp_ns_role_binding_list = \
+            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
 
         cluster_role_list = tmp_cluster_role_list.result()
         cluster_role_binding_list = tmp_cluster_role_binding_list.result()
@@ -27,7 +34,7 @@ class ClusterRBAC:
     def get_rbac_count():
         headers = ['CLUSTER_ROLE', 'CLUSTER_ROLE_BINDING', 'ROLE', 'ROLE_BINDING']
         k8s.Output.print_table([[len(cluster_role_list.items), len(cluster_role_binding_list.items), \
-        len(ns_role_list.items), len(ns_role_binding_list.items)]],headers,True) 
+        len(ns_role_list.items), len(ns_role_binding_list.items)]], headers, True) 
        
     def get_cluster_role(v):
         k8s_object = "clusteroles"
@@ -41,9 +48,10 @@ class ClusterRBAC:
                 rules[0], rules[1], rules[2]])
             else:
                 data.append([item.metadata.name, "-", "-", "-", "-"])
-        k8s.Rbac.analyse_role(data, headers, k8s_object) 
+        k8s.Rbac.analyse_role(data, headers, k8s_object, 'all') 
         data.append(['----------', '---', '---', '---', '---'])
-        data.append(["Total: " + str(len(cluster_role_list.items)), rules[3], "-", "-", "-"])
+        data.append(["Total: " + str(len(cluster_role_list.items)), \
+        rules[3], "-", "-", "-"])
         k8s.Output.print_table(data,headers,v)
 
     def get_cluster_role_binding(v): 
@@ -59,10 +67,11 @@ class ClusterRBAC:
             else:
                 data.append([item.metadata.name, item.role_ref.name, '', ''])
         data.append(['----------', '---', '---', '---'])
-        data.append(["Total: " + str(len(cluster_role_binding_list.items)), "-", "-", "-"])                 
+        data.append(["Total: " + str(len(cluster_role_binding_list.items)), \
+        "-", "-", "-"])
         k8s.Output.print_table(data,headers,v)
-        k8s.Output.csv_out(data, headers, 'rbac', 'cluster_role_binding')
-        json_data = k8s.Output.json_out(data, headers, 'rbac', 'cluster_role_binding')          
+        k8s.Output.csv_out(data, headers, 'rbac', 'cluster_role_binding', 'all')
+        json_data = k8s.Output.json_out(data, headers, 'rbac', 'cluster_role_binding', 'all')          
 
     def get_ns_role(v):    
         data = []
@@ -74,10 +83,12 @@ class ClusterRBAC:
                 data.append([item.metadata.name, item.metadata.namespace, \
                 len(item.rules), rules[0], rules[1], rules[2]])
             else:
-                data.append([item.metadata.name, item.metadata.namespace, "-", "-", "-", "-"])
-        k8s.Rbac.analyse_role(data, headers, k8s_object)
+                data.append([item.metadata.name, item.metadata.namespace, \
+                "-", "-", "-", "-"])
+        k8s.Rbac.analyse_role(data, headers, k8s_object, namespace)
         data.append(['----------', '---', '---', '---', '---', '---'])
-        data.append(["Total: " + str(len(ns_role_list.items)), "-", "-", "-",  "-", "-"])          
+        data.append(["Total: " + str(len(ns_role_list.items)), \
+        "-", "-", "-",  "-", "-"])          
         k8s.Output.print_table(data,headers,v)
 
     def get_ns_role_binding(v):      
@@ -97,10 +108,11 @@ class ClusterRBAC:
                 data.append([item.metadata.name, item.metadata.namespace, \
                 item.role_ref.name, 'None'])
         data.append(['----------', '---', '---', '---'])
-        data.append(["Total: " + str(len(ns_role_binding_list.items)), "-", "-", "-"]) 
+        data.append(["Total: " + str(len(ns_role_binding_list.items)), \
+        "-", "-", "-"]) 
         k8s.Output.print_table(data,headers,v)
-        k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding')
-        json_data = k8s.Output.json_out(data, headers, 'rbac', 'ns_role_binding')          
+        k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding', namespace)
+        json_data = k8s.Output.json_out(data, headers, 'rbac', 'ns_role_binding', namespace)    
 
 def call_all(v,ns):
     ClusterRBAC(ns)
@@ -113,7 +125,8 @@ def call_all(v,ns):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:", ["help", "verbose", "namespace"])
         if not opts:        
             call_all("","")
             k8s.Output.time_taken(start_time)
