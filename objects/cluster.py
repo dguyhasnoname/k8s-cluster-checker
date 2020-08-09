@@ -7,20 +7,6 @@ import glob
 start_time = time.time()
 from modules import process as k8s
 
-class Logger(object):
-    def __init__(self, filename):
-        self.terminal = sys.stdout
-        self.log = open(filename, "a")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        pass
-
-sys.stdout = Logger("./report")
-
 class Cluster:
     # fetching cluster name from modules/get_cm.py
     def get_cluster_name():
@@ -33,9 +19,9 @@ class Cluster:
                     item.data['ClusterConfiguration']).group(1)
                     print (k8s.Output.BOLD + "\nCluster name: "+ \
                     k8s.Output.RESET + "{}".format(cluster_name))
+                    return cluster_name
             else:
                 pass
-        return cluster_name
 
     global cluster_name
     cluster_name = get_cluster_name()
