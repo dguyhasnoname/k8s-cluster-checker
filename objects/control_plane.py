@@ -15,14 +15,19 @@ class CtrlPlane:
             print ("\n[INFO] Fetching control plane workload data...")
             ctrl_plane_pods = core.list_namespaced_pod(namespace, \
             label_selector='tier=control-plane', timeout_seconds=10)
+            if not ctrl_plane_pods.items:
+                print (k8s.Output.RED + "[ERROR] " + k8s.Output.RESET \
+                + "No control plane pods found with label 'tier=control-plane'")
+                return
             return ctrl_plane_pods
         except ApiException as e:
             print("Exception when calling CoreV1Api->list_namespaced_pod: %s\n" % e)
     
     k8s_object_list = check_ctrl_plane_pods()
-    k8s_object = 'pods'
+    k8s_object = 'pods'  
 
     def get_ctrl_plane_pods():
+        if not k8s_object_list: return
         data = []
         headers = ['NAMESPACE', 'PODS', 'NODE_NAME', 'QoS']
         for item in k8s_object_list.items:
@@ -59,6 +64,7 @@ class CtrlPlane:
         k8s.Check.qos(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_ctrl_plane_pods_properties(v):
+        if not k8s_object_list: return
         container_name_check = ""
         headers = ['CTRL_PLANE_COMPONENT/ARGS', '']
         for item in k8s_object_list.items:
