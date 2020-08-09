@@ -127,7 +127,7 @@ class Namespace:
                     k8s.Output.separator(k8s.Output.GREEN,'-')
                     get_all_object_data(ns, True)
             else:
-                get_all_object_data(ns)
+                get_all_object_data(ns, v)
 
         # getting namespaces which are empty
         if len(empty_ns) > 0:
