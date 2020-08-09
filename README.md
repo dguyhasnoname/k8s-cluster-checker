@@ -16,6 +16,11 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
 - rbac analysis
 - k8s objects in a namespace 
 - stale namespaces with no workloads
+ 
+Once the tool is run, it generates output in 3 ways:
+1. stdout on the screen to visualise the analysis right away.
+2. report in `csv` files are generated for each analysis. A combined report is generated in excel file. You can use it for your own custom analysis.
+3. json output is generated for each analysis which can be consumed in down-stream scripts.
 
 This tool performs read-only operations on any k8s cluster. You can make a service account/kubeconfig with full read-only access to all k8s-objects and use the same to run the tool.
 
@@ -56,6 +61,7 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
 ## Pre-requisites
 
 1. python3 with below packages:
+    - pandas
     - kubernetes
     - argparse
     - columnar
@@ -63,11 +69,15 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
     - requests
     - futures
     - packaging
+    - xlsxwriter
+
 2. `pip3` needs to be installed to get above packages. `pip` is already installed if you are using Python 2 >=2.7.9 or Python 3 >=3.4. You need to install above packages with command: 
 
     ```
     pip3 install <package-name>
     ```
+
+A docker image is available on [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) with all the dependencies installed. Follow this readme for docker image instructions.
 
 3. KUBECONFIG for the cluster needs to be exported as env. It is read by k8s-cluster-checker scripts to connect to the cluster.
 
@@ -91,6 +101,7 @@ e.g.
     
     docker build -t dguyhasnoname/k8s-cluster-checker:latest .
     
+Running through docker image would be much easier than installing dependencies on your machine. The docker image being used is based on `python:3.8-slim-buster` which is a very light weight version of python in docker.
 Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) for latest image, if you do not want to build your own image. You can download the latest image from dockerhub as the dockerhub image build is integrated with this repo and it polls this repo for update.
 
     docker pull dguyhasnoname/k8s-cluster-checker:latest
