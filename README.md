@@ -22,6 +22,9 @@ Once the tool is run, it generates output in 3 ways:
 2. report in `csv` files are generated for each analysis. A combined report is generated in excel file. You can use it for your own custom analysis.
 3. json output is generated for each analysis which can be consumed in down-stream scripts.
 
+Compatible k8s versions: 1.14+ 
+Running k8s-cluster-check on older k8s version 1.10.x to 1.13.x may result in missing results/exceptions.
+
 This tool performs read-only operations on any k8s cluster. You can make a service account/kubeconfig with full read-only access to all k8s-objects and use the same to run the tool.
 
 #### k8s-cluster-checker contains below scripts:
@@ -60,7 +63,7 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
 
 ## Pre-requisites
 
-1. python3 with below packages:
+1. python3 with below ![packages](requirements.txt):
     - pandas
     - kubernetes
     - argparse
@@ -77,7 +80,7 @@ This tool performs read-only operations on any k8s cluster. You can make a servi
     pip3 install <package-name>
     ```
 
-A docker image is available on [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) with all the dependencies installed. Follow this readme for docker image instructions.
+    A docker image is available on [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) with all the dependencies installed. Follow this readme for docker image instructions.
 
 3. KUBECONFIG for the cluster needs to be exported as env. It is read by k8s-cluster-checker scripts to connect to the cluster.
 
