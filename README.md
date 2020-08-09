@@ -22,8 +22,8 @@ Once the tool is run, it generates output in 3 ways:
 2. report in `csv` files are generated for each analysis. A combined report is generated in excel file. You can use it for your own custom analysis.
 3. json output is generated for each analysis which can be consumed in down-stream scripts.
 
-Compatible k8s versions: 1.14+  
-Running k8s-cluster-check on older k8s version 1.10.x to 1.13.x may result in missing results/exceptions.
+*Compatible k8s versions:* 1.14+  
+Running k8s-cluster-check on older k8s version 1.10.x to 1.13.x may result in missing results/exceptions. Tool do not support k8s version previous to 1.10.x.
 
 This tool performs read-only operations on any k8s cluster. You can make a service account/kubeconfig with full read-only access to all k8s-objects and use the same to run the tool.
 
