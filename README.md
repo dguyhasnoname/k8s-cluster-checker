@@ -22,7 +22,7 @@ Once the tool is run, it generates output in 3 ways:
 2. report in `csv` files are generated for each analysis. A combined report is generated in excel file. You can use it for your own custom analysis.
 3. json output is generated for each analysis which can be consumed in down-stream scripts.
 
-Compatible k8s versions: 1.14+ 
+Compatible k8s versions: 1.14+  
 Running k8s-cluster-check on older k8s version 1.10.x to 1.13.x may result in missing results/exceptions.
 
 This tool performs read-only operations on any k8s cluster. You can make a service account/kubeconfig with full read-only access to all k8s-objects and use the same to run the tool.
@@ -104,7 +104,8 @@ e.g.
     
     docker build -t dguyhasnoname/k8s-cluster-checker:latest .
     
-Running through docker image would be much easier than installing dependencies on your machine. The docker image being used is based on `python:3.8-slim-buster` which is a very light weight version of python in docker.
+Running through docker image would be much easier than installing dependencies on your machine. The docker image being used is based on `python:3.8-slim-buster` which is a very light weight version of python in docker.  
+
 Please check [dockerhub](https://hub.docker.com/repository/docker/dguyhasnoname/k8s-cluster-checker) for latest image, if you do not want to build your own image. You can download the latest image from dockerhub as the dockerhub image build is integrated with this repo and it polls this repo for update.
 
     docker pull dguyhasnoname/k8s-cluster-checker:latest
