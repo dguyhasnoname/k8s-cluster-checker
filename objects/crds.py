@@ -12,7 +12,7 @@ class _CRDs:
 
     def get_crds(v):
         data, crd_group, count_crd_group_crds, headers = \
-        [], [], [], ['CRD_GROUP', 'CRD_COUNT']
+        [], [], [], ['CRD_GROUP', 'CRD_COUNT', 'SCOPE']
         for item in k8s_object_list.items:
             data.append([item.spec.group, item.metadata.name, item.spec.scope])
             crd_group.append([item.spec.group])

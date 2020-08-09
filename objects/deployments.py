@@ -49,7 +49,7 @@ class _Deployment:
         k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_deployment_strategy(v): 
-        headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'STRATEGY_TYPE']
+        headers = ['DEPLOYMENT', 'STRATEGY_TYPE']
         k8s.Check.strategy(k8s_object, k8s_object_list, headers, v, namespace)
 
     def check_replica(v): 

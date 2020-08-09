@@ -279,8 +279,8 @@ class Check:
                 data.append([item.metadata.name, item.spec.strategy.type])
         Output.print_table(data, headers, v)
         Output.csv_out(data, headers, k8s_object, 'rollout_strategy', ns)
-        # json_data = Output.json_out(data, headers, k8s_object, 'rollout_strategy')        
-        # return json_data
+        json_data = Output.json_out(data, headers, k8s_object, 'rollout_strategy', ns)
+        return json_data
 
     # check for single replica
     def replica(k8s_object, k8s_object_list, headers, v, ns):

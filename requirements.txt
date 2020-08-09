@@ -5,3 +5,5 @@ click
 requests
 futures
 packaging
+xlsxwriter
+pandas

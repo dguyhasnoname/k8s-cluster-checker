@@ -1,15 +1,11 @@
 import modules.message
 import threading as threading
 import sys, time, os, getopt, argparse, re
+import pandas as pd
+import xlsxwriter
+import glob
 start_time = time.time()
 from modules import process as k8s
-# import control_plane as cp
-# import nodes as node
-# import rbac as rbac
-# import namespace as ns
-# import services as svc
-# import crds as crds
-# from modules.get_cm import K8sConfigMap
 
 class Logger(object):
     def __init__(self, filename):
@@ -38,6 +34,10 @@ class Cluster:
                     print (k8s.Output.BOLD + "\nCluster name: "+ k8s.Output.RESET + "{}".format(cluster_name))
             else:
                 pass
+        return cluster_name
+
+    global cluster_name
+    cluster_name = get_cluster_name()
 
     # fetching nodes data from nodes.py
     def get_node_data(v):
@@ -95,11 +95,27 @@ class Cluster:
     def get_crd_details(v):
         import crds as crds
         print ("\nCRD details:")
-        crds.call_all(v,'')        
+        crds.call_all(v,'')
+
+    # generating combined report for the cluster
+    def merge_reports():
+        combined_report_file = './reports/combined_cluster_report.xlsx'
+        csv_report_folder = '/reports/csv'
+        writer = pd.ExcelWriter(combined_report_file, engine='xlsxwriter')
+        csv_list = next(os.walk('.' + csv_report_folder))[2]
+        csv_list.sort()
+        for host in csv_list:
+            path = os.path.join(os.getcwd() + csv_report_folder, host)
+            for f in glob.glob(path):
+                df = pd.read_csv(f)
+                df.to_excel(writer, sheet_name=os.path.basename(f)[:31])
+        writer.save()
+        print ("[INFO] {} reports generated for cluster {}".format(len(csv_list), cluster_name))
+        print ("[INFO] Combined cluster report file: {}"\
+        .format(combined_report_file))             
 
 def call_all(v):  
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_cluster_name()
     Cluster.get_node_data(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_ctrl_plane_data(v)
@@ -110,6 +126,7 @@ def call_all(v):
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
     Cluster.get_rbac_details(v)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+    Cluster.merge_reports()
 
 def main():
     try:
