@@ -1,7 +1,8 @@
 # k8s-cluster-checker
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/dguyhasnoname/k8s-cluster-checker.svg)
-![Docker Automated](https://img.shields.io/docker/automated/dguyhasnoname/k8s-cluster-checker.svg)
+[![pypi supported versions](https://img.shields.io/pypi/pyversions/kubernetes.svg)](https://pypi.python.org/pypi/kubernetes)
+
 
 ![logo](/docs/imgs/logo.png)
 
