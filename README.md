@@ -1,5 +1,7 @@
 # k8s-cluster-checker
 
+![Docker Build](https://img.shields.io/docker/build/dguyhasnoname/k8s-cluster-checker.svg)
+
 ![logo](/docs/imgs/logo.png)
 
 k8s-cluster-checker is bundle of python scripts which can be used to analyse below configurations in a kubernetes cluster:
