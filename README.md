@@ -1,6 +1,8 @@
 # k8s-cluster-checker
 
+![Docker Pulls](https://img.shields.io/docker/pulls/dguyhasnoname/k8s-cluster-checker.svg)
 ![Docker Build](https://img.shields.io/docker/build/dguyhasnoname/k8s-cluster-checker.svg)
+![Docker Automated](https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg)
 
 ![logo](/docs/imgs/logo.png)
 
