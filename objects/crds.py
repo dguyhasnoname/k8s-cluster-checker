@@ -1,15 +1,17 @@
 import sys, time, os, getopt, argparse, re, itertools
 start_time = time.time()
+from modules import logging as logger
 from modules import process as k8s
 from modules.get_crds import K8sCRDs
 
 class _CRDs:
-    global k8s_object_list, k8s_object
+    global k8s_object_list, k8s_object, _logger
+    _logger = logger.get_logger('_CRDs')
     k8s_object_list = K8sCRDs.get_crds()
     k8s_object = 'crds'
     #print (k8s_object_list)
 
-    def get_crds(v):
+    def get_crds(v, ns, l):
         data, crd_group, count_crd_group_crds, headers = \
         [], [], [], ['CRD_GROUP', 'CRD_COUNT', 'SCOPE']
         for item in k8s_object_list.items:
@@ -32,28 +34,29 @@ class _CRDs:
         crd_group = k8s.Output.append_hyphen(crd_group, '---------')
         crd_group.append(['Total: ' + str(len(crd_group) - 1), len(data)])
 
-        k8s.Output.print_table(crd_group, headers, True)
+        k8s.Output.print_table(crd_group, headers, True, l)
+
         k8s.CRDs.check_ns_crd(k8s_object_list, k8s_object, data, \
-        headers, v, 'all')
+        headers, v, 'all', l)
 
         return data
 
-def call_all(v,ns):
-    _CRDs.get_crds(v)
+def call_all(v, ns, l):
+    _CRDs.get_crds(v, ns, l)
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-        "hvn:", ["help", "verbose", "namespace"])
+        "hvn:l", ["help", "verbose", "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('', '', '')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l = '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
@@ -61,10 +64,12 @@ def main():
             verbose = True
         elif o in ("-n", "--namespace"):
             if not verbose: verbose = False
-            ns = a          
+            ns = a
+        elif o in ("-l", "--logging"):
+            l = True                    
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time)
 
 if __name__ == "__main__":
