@@ -1,14 +1,16 @@
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
+from modules import logging as logger
 from modules import process as k8s
 from modules.get_nodes import K8sNodes
 
 class _Nodes:
-    global k8s_object, k8s_object_list, k8s_node
+    global k8s_object, k8s_object_list, k8s_node, _logger
+    _logger = logger.get_logger('_Nodes')
     k8s_object_list = K8sNodes.get_nodes()
     k8s_object = 'nodes'
 
-    def get_nodes_details(v):
+    def get_nodes_details(v, l):
         data, temp_bar = [], []
         headers = ['NODE_NAME', 'K8S_VERSION', 'ROLE', 'NODE_CPU', 'NODE_MEM_GB', \
         'VOLUMES_USED/ATTACHED', 'POD_CIDR', 'OS_NAME', 'DOCKER_VERSION', 'INSTANCE_TYPE', 'REGION']
@@ -54,7 +56,10 @@ class _Nodes:
             docker_version, instance_type, region, volumes_used, volumes_attached])
             
         k8s.Output.csv_out(data, headers, 'nodes', 'detail', '')
-        k8s.Output.json_out(data, headers, 'nodes', 'detail', '')
+        json_out = k8s.Output.json_out(data, '', headers, 'nodes', 'detail', '')
+
+        if l: _logger.info(json_out)
+        
         total_cpu, total_mem, masters, nodes, etcd, others, \
         total_vol = 0, 0, 0, 0, 0, 0, 0
         for i in data:
@@ -77,7 +82,7 @@ class _Nodes:
         item.status.node_info.os_image, docker_version, u'\u2717', \
         u'\u2717', '', ''])
         if v:
-            k8s.Output.print_table(data,headers,v)
+            k8s.Output.print_table(data, headers, v, l)
         else:
             # print summary of nodes from last line of data list
             for i in data[-1:]:
@@ -87,35 +92,40 @@ class _Nodes:
                 + str(masters+nodes+etcd+others), '', '', '', '', '', ''])
             headers = ['TOTAL_NODES', 'K8S_VERSION', 'TOTAL_CPU', \
             'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
-            k8s.Output.print_table(short_data,headers,True)
+            k8s.Output.print_table(short_data, headers, True, l)
 
         print ("[INFO] Checking for latest and installed versions...")
-        k8s.Nodes.node_version_check(item.status.node_info.os_image, \
-        docker_version, item.status.node_info.kubelet_version)
+        data_version_check = k8s.Nodes.node_version_check(item.status.node_info.os_image, \
+        docker_version, item.status.node_info.kubelet_version, l)
+        
+        if l: _logger.info(data_version_check)
 
-def call_all(v):
-    _Nodes.get_nodes_details(v)
+def call_all(v, l):
+    _Nodes.get_nodes_details(v, l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hv", ["help", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvl", ["help", "verbose", "logging"])
         if not opts:        
-            call_all("")
+            call_all('','')
             
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)
         return
 
+    verbose, l = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-            call_all(verbose)
+        elif o in ("-l", "--logging"):
+            l = True            
         else:
             assert False, "unhandled option"
-
+    call_all(verbose, l)
     k8s.Output.time_taken(start_time)
 
 if __name__ == "__main__":
