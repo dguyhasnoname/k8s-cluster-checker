@@ -5,6 +5,7 @@ import pandas as pd
 import xlsxwriter
 import glob
 start_time = time.time()
+from modules import logging as logger
 from modules import process as k8s
 
 class Cluster:
@@ -23,71 +24,78 @@ class Cluster:
             else:
                 pass
 
-    global cluster_name
+    global cluster_name, k8s_object, _logger
+    _logger = logger.get_logger('Cluster')     
     cluster_name = get_cluster_name()
 
     # fetching nodes data from nodes.py
-    def get_node_data(v):
+    def get_node_data(v, l):
         import nodes as node
         print ("\nNode details:")
-        node._Nodes.get_nodes_details(v)
+        node._Nodes.get_nodes_details(v, l)
     
     # getting namespaced data
-    def get_namespaced_data(v):
+    def get_namespaced_data(v, l):
         # fetching namespaced data from namespace.py
         import namespace as ns
-        data = ns.Namespace.get_ns_data(False,'')
+        data = ns.Namespace.get_ns_data(False, '', l)
 
         # variables to store data from get_ns_data function from namespace.py
         cluster_pods_list, cluster_svc_list = data[1], data[2]
 
         # analysing security context from security_context function in modules/process.py
-        k8s.Check.security_context('pods', cluster_pods_list, \
+        data_security_context = k8s.Check.security_context('pods', cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], \
-        v, 'all')
+        v, 'all', l)
+        if l: _logger.info(data_security_context)
 
         # analysing health checks from health_probes function in modules/process.py
-        k8s.Check.health_probes('pods', cluster_pods_list, \
+        data_health_probes = k8s.Check.health_probes('pods', cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], \
-        v, 'all')
+        v, 'all', l)
+        if l: _logger.info(data_health_probes)
 
         # analysing limit/requests from resources function in modules/process.py
-        k8s.Check.resources('pods',cluster_pods_list, \
-        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, 'all')
+        data_resources = k8s.Check.resources('pods',cluster_pods_list, \
+        ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, 'all', l)
+        if l: _logger.info(data_security_context)
 
         # analysing qos context from qos function in modules/process.py
-        k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], \
-        v, 'all')
+        data_qos = k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], \
+        v, 'all', l)
+        if l: _logger.info(data_qos)
 
         # analysing image_pull_policy from image_pull_policy function in modules/process.py
-        k8s.Check.image_pull_policy('pods', cluster_pods_list, \
+        data_image_pull_policy = k8s.Check.image_pull_policy('pods', cluster_pods_list, \
         ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY'], \
-        v, 'all')
+        v, 'all', l)
+        if l: _logger.info(data_image_pull_policy)
 
         # analysing services from get_service function in modules/process.py
-        k8s.Service.get_service('services', cluster_svc_list, \
-        ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', 'SELECTOR'], \
-        v, 'all')
+        data_get_service = k8s.Service.get_service('services', cluster_svc_list, \
+        ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'IP', 'SELECTOR'], \
+        v, 'all', l)
+        if l: _logger.info(data_get_service[0])
 
     # fetching control plane data from control_plane.py
-    def get_ctrl_plane_data(v):
+    def get_ctrl_plane_data(v, l):
         import control_plane as cp
         print ("\nControl plane details:")
-        cp.CtrlPlane.get_ctrl_plane_pods()
-        cp.CtrlPlane.check_ctrl_plane_pods_properties(v)
+        cp.CtrlPlane.get_ctrl_plane_pods(l)
+        cp.CtrlPlane.check_ctrl_plane_pods_properties(v, l)
     
     # fetching RBAC data from rbac.py
-    def get_rbac_details(v):
+    def get_rbac_details(v, l):
         import rbac as rbac
         print ("\nRBAC details:")
-        rbac.call_all(v,'')
+        rbac.call_all(v, '', l)
 
     # fetching CRD data from crds.py
-    def get_crd_details(v):
+    def get_crd_details(v, l):
         import crds as crds
         print ("\nCRD details:")
-        crds.call_all(v,'')
+        crds.call_all(v, '', l)
 
     # generating combined report for the cluster
     def merge_reports():
@@ -107,40 +115,41 @@ class Cluster:
         print ("[INFO] Combined cluster report file: {}"\
         .format(combined_report_file))             
 
-def call_all(v):  
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_node_data(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_ctrl_plane_data(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_namespaced_data(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_crd_details(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
-    Cluster.get_rbac_details(v)
-    k8s.Output.separator(k8s.Output.GREEN,u'\u2581')
+def call_all(v, l):  
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
+    Cluster.get_node_data(v, l)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
+    Cluster.get_ctrl_plane_data(v, l)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
+    Cluster.get_namespaced_data(v,l)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
+    Cluster.get_crd_details(v, l)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
+    Cluster.get_rbac_details(v, l)
+    k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
     Cluster.merge_reports()
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-        "hvr", ["help", "verbose", "report"])
+        "hvrl", ["help", "verbose", "report", "logging"])
         if not opts:        
-            call_all("")
+            call_all('','')
             
     except getopt.GetoptError as err:
         print(err)
         return
-
+    verbose, l = '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose= True
-            call_all(verbose)
+        elif o in ("-l", "--logging"):
+            l = True            
         else:
             assert False, "unhandled option"
-
+    call_all(verbose,l)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
