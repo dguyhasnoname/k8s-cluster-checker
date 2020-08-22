@@ -1,4 +1,5 @@
 import sys, time, os, getopt
+from modules import logging as logger
 from modules.get_ds import K8sDaemonSet
 from modules import process as k8s
 
@@ -27,53 +28,58 @@ class _Daemonset:
         namespace = ns
         k8s_object_list = K8sDaemonSet.get_damemonsets(ns) 
   
-    global k8s_object
+    global k8s_object, _logger
+    _logger = logger.get_logger('_Daemonset') 
     k8s_object = 'daemonset'
 
-    def check_damemonset_security(v):
+    def check_damemonset_security(v, l):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
         data = k8s.Check.security_context(k8s_object, k8s_object_list, \
-        headers, v, namespace)
+        headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_damemonset_health_probes(v):
+    def check_damemonset_health_probes(v, l):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', \
         'READINESS_PROPBE', 'LIVENESS_PROBE']        
         data = k8s.Check.health_probes(k8s_object, k8s_object_list, \
-        headers, v, namespace)
+        headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_damemonset_resources(v):
+    def check_damemonset_resources(v, l):
         headers = ['NAMESPACE', 'DAEMONSET', 'CONTAINER_NAME', \
         'LIMITS', 'REQUESTS']
         data = k8s.Check.resources(k8s_object, k8s_object_list, \
-        headers, v, namespace)
+        headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_damemonset_tolerations_affinity_node_selector_priority(v):  
+    def check_damemonset_tolerations_affinity_node_selector_priority(v, l):  
         headers = ['NAMESPACE', 'DAEMONSET', 'NODE_SELECTOR', \
         'TOLERATIONS', 'AFFINITY', 'PRIORITY_CLASS']
         data = k8s.Check.tolerations_affinity_node_selector_priority(\
-        k8s_object, k8s_object_list, headers, v, namespace)
+        k8s_object, k8s_object_list, headers, v, namespace, l)
+        if l: _logger.info(data)
 
-def call_all(v,ns):
+def call_all(v, ns, l):
     _Daemonset(ns)
-    _Daemonset.check_damemonset_security(v)
-    _Daemonset.check_damemonset_health_probes(v)
-    _Daemonset.check_damemonset_resources(v)
-    _Daemonset.check_damemonset_tolerations_affinity_node_selector_priority(v)
+    _Daemonset.check_damemonset_security(v, l)
+    _Daemonset.check_damemonset_health_probes(v, l)
+    _Daemonset.check_damemonset_resources(v, l)
+    _Daemonset.check_damemonset_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-        "hvn:", ["help", "verbose", "namespace"])
+        "hvn:l", ["help", "verbose", "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('', '', '')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l = '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
@@ -81,10 +87,12 @@ def main():
             verbose = True
         elif o in ("-n", "--namespace"):
             if not verbose: verbose = False
-            ns = a          
+            ns = a    
+        elif o in ("-l", "--logging"):
+            l = True                   
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time)
 
 if __name__ == "__main__":
