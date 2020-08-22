@@ -1,11 +1,17 @@
 import sys, time, os, re, getopt
 import requests
+start_time = time.time()
+from modules import logging as logger
 from modules import process as k8s
 from modules.get_deploy import K8sDeploy
 
-start_time = time.time()
+
 
 class Images:
+    global _logger, k8s_object
+    _logger = logger.get_logger('Images')
+    k8s_object = 'images'
+ 
     def __init__(self,ns):
         global k8s_object_list
         self.ns = ns
@@ -13,7 +19,7 @@ class Images:
             ns = 'all'
         k8s_object_list = K8sDeploy.get_deployments(ns)
 
-    def get_images():
+    def get_images(v, ns, l):
         data = []
         for item in k8s_object_list.items:
             for container in item.spec.template.spec.containers:
@@ -21,14 +27,15 @@ class Images:
                 container.image_pull_policy])
         return data
     
-    def list_images():
-        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE:TAG', 'IMAGE_PULL_POLICY']   
-        data = Images.get_images()
-        k8s.Output.print_table(data,headers)
+    def list_images(v, ns, l):
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE:TAG', \
+        'IMAGE_PULL_POLICY']   
+        data = Images.get_images(v, ns, l)
+        k8s.Output.print_table(data, headers, True, l)
 
-    def get_last_updated_tag():
+    def get_last_updated_tag(v, ns, l):
         repo = []
-        data = Images.get_images()
+        data = Images.get_images(v, ns, l)
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE_PULL_POLICY', \
         'IMAGE:TAG', 'LATEST_TAG_AVAILABLE']
         print ("\n[INFO] Checking for latest image tags...")
@@ -54,11 +61,13 @@ class Images:
             else:
                 repo_name = u'\u2717'
             result.append([image[0], image[1], image[2], image[4], image[3], repo_name])
-        k8s.Output.print_table(result,headers,True)
+        k8s.Output.print_table(result, headers, True, l)
 
-    def image_recommendation():
+    def image_recommendation(v, ns, l):
         config_not_defined, if_not_present, always = [], [], []
-        data = Images.get_images()
+        headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE:TAG', \
+        'IMAGE_PULL_POLICY']
+        data = Images.get_images(v, ns, l)
         for image in data:
             if not 'Always' in image[-1]:
                 config_not_defined.append(image[3])
@@ -67,30 +76,43 @@ class Images:
             if 'Always' in image[-1]:
                 always.append(True)
         print ("\n{}: {}".format('images', len(k8s_object_list.items)))
-        k8s.Output.bar(if_not_present, data,'with image pull-policy', \
+        data_if_not_present = k8s.Output.bar(if_not_present, data,'with image pull-policy', \
         'deployments', '"IfNotPresent"', k8s.Output.YELLOW)
-        k8s.Output.bar(always, data,'with image pull-policy', 'deployments',\
+        data_always = k8s.Output.bar(always, data,'with image pull-policy', 'deployments',\
          '"Always"', k8s.Output.GREEN)                
-        k8s.Output.bar(config_not_defined, data, 'has not defined recommended image pull-policy', \
+        data_never = k8s.Output.bar(config_not_defined, data, \
+        'has not defined recommended image pull-policy', \
         'deployments', '"Always"', k8s.Output.RED)
 
-def call_all(v,ns):
+        if l:
+            # creating analysis data for logging
+            analysis = {"container_property": "image_pull_policy",
+                        "total_images_count": len(data),
+                        "if_not_present_pull_policy_containers_count": data_if_not_present,
+                        "always_pull_policy_containers_count": data_always,
+                        "never_pull_policy_containers_count": data_never}         
+            json_data = k8s.Output.json_out(data, analysis, headers, k8s_object, 'image_pull_policy', ns)
+            _logger.info(json_data)        
+
+def call_all(v, ns, l):
     Images(ns)
-    # Images.list_images()
-    Images.image_recommendation()
-    if v: Images.get_last_updated_tag()
+    Images.list_images(v, ns, l)
+    Images.image_recommendation(v, ns, l)
+    if v: Images.get_last_updated_tag(v, ns, l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvn:l", ["help", "verbose", "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('', '', '')
+            k8s.Output.time_taken(start_time) 
             sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l = '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
@@ -98,10 +120,12 @@ def main():
             verbose = True
         elif o in ("-n", "--namespace"):
             if not verbose: verbose = False
-            ns = a          
+            ns = a
+        elif o in ("-l", "--logging"):
+            l = True                   
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time) 
 
 if __name__ == "__main__":
