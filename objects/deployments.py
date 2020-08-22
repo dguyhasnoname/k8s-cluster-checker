@@ -1,5 +1,6 @@
-import sys, os, getopt, time
+import sys, os, getopt, time, json
 from time import sleep
+from modules import logging as logger
 from modules import process as k8s
 from modules.get_deploy import K8sDeploy
 
@@ -28,55 +29,65 @@ class _Deployment:
         namespace = ns
         k8s_object_list = K8sDeploy.get_deployments(ns)
 
-    global k8s_object
-    k8s_object = 'deployments'  
+    global k8s_object, _logger
+    _logger = logger.get_logger('_Deployment') 
+    k8s_object = 'deployments'
 
-    def check_deployment_security(v):
+    def check_deployment_security(v,l):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
-        v, namespace)
+        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_deployment_health_probes(v):
+    def check_deployment_health_probes(v,l):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', \
         'READINESS_PROPBE', 'LIVENESS_PROBE']        
-        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
-        v, namespace)  
+        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)  
+        if l: _logger.info(data)
 
-    def check_deployment_resources(v): 
+    def check_deployment_resources(v,l): 
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'LIMITS', \
         'REQUESTS']       
-        k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
+        data = k8s.Check.resources(k8s_object, k8s_object_list, \
+        headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_deployment_strategy(v): 
+    def check_deployment_strategy(v,l): 
         headers = ['DEPLOYMENT', 'STRATEGY_TYPE']
-        k8s.Check.strategy(k8s_object, k8s_object_list, headers, v, namespace)
+        data = k8s.Check.strategy(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_replica(v): 
+    def check_replica(v,l): 
         headers = ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT']
-        k8s.Check.replica(k8s_object, k8s_object_list, headers, v, namespace)         
+        data = k8s.Check.replica(k8s_object, k8s_object_list, headers,\
+        v, namespace, l)         
+        if l: _logger.info(data)
 
-    def check_deployment_tolerations_affinity_node_selector_priority(v): 
+    def check_deployment_tolerations_affinity_node_selector_priority(v,l): 
         headers = ['NAMESPACE', 'DEPLOYMENT', 'NODE_SELECTOR', 'TOLERATIONS', \
         'AFFINITY', 'PRIORITY_CLASS']     
-        k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
-        k8s_object_list, headers, v, namespace)       
+        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
+        k8s_object_list, headers, v, namespace, l)  
+        if l: _logger.info(data)     
 
-def call_all(v,ns):
+def call_all(v,ns,l):
     _Deployment(ns)
-    _Deployment.check_deployment_security(v)
-    _Deployment.check_deployment_health_probes(v)
-    _Deployment.check_deployment_resources(v)
-    _Deployment.check_deployment_strategy(v)
-    _Deployment.check_replica(v)
-    _Deployment.check_deployment_tolerations_affinity_node_selector_priority(v)
+    _Deployment.check_deployment_security(v,l)
+    _Deployment.check_deployment_health_probes(v,l)
+    _Deployment.check_deployment_resources(v,l)
+    _Deployment.check_deployment_strategy(v,l)
+    _Deployment.check_replica(v,l)
+    _Deployment.check_deployment_tolerations_affinity_node_selector_priority(v,l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", \
-        "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:l", ["help", "verbose", \
+        "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('','','')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
@@ -91,10 +102,12 @@ def main():
             verbose = True
         elif o in ("-n", "--namespace"):
             if not verbose: verbose = False
-            ns = a          
+            ns = a
+        elif o in ("-l", "--logging"):
+            l = True                  
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose,ns,l)
     k8s.Output.time_taken(start_time) 
 
 if __name__ == "__main__":
