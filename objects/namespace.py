@@ -134,7 +134,7 @@ class Namespace:
                     "total_rolebindings": total_role_bindings}
 
         json_data_all_ns_detail = k8s.Output.json_out(data, analysis, headers, 'namespace', 'namespace_details', '')  
-        _logger.info(json_data_all_ns_detail)      
+        if l: _logger.info(json_data_all_ns_detail)      
 
         # get namespace wise object details. Will give output in verbose mode
         def get_all_object_data(ns, v, l):
@@ -174,7 +174,7 @@ class Namespace:
                         "empty_namespae_list": empty_ns
                         }
             
-            _logger.info(analysis)
+            if l: _logger.info(analysis)
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
         
