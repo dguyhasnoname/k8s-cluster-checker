@@ -1,10 +1,9 @@
 import sys, os, getopt, time, json
 from time import sleep
+start_time = time.time()
 from modules import logging as logger
 from modules import process as k8s
 from modules.get_deploy import K8sDeploy
-
-start_time = time.time()
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -94,20 +93,19 @@ def main():
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l= '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-n", "--namespace"):
-            if not verbose: verbose = False
             ns = a
         elif o in ("-l", "--logging"):
             l = True                  
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns,l)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time) 
 
 if __name__ == "__main__":
