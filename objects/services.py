@@ -15,43 +15,45 @@ class _Service:
     global k8s_object
     k8s_object = 'services'
 
-    def list_service(v):
+    def list_service(v, l):
         headers = ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', \
         'SELECTOR']
         data = k8s.Service.get_service(k8s_object, k8s_object_list, headers, \
-        v, namespace)
-        data = k8s.Output.append_hyphen(data, '---------')
+        v, namespace, l)
+        
+        data = k8s.Output.append_hyphen(data[1], '---------')
         data.append(["Total: " , len(data) - 1 , '-', '-', '-'])
-        k8s.Output.print_table(data, headers, v)
+        k8s.Output.print_table(data, headers, v, l)
 
-def call_all(v,ns):
+def call_all(v, ns, l):
     _Service(ns)
-    _Service.list_service(v)
+    _Service.list_service(v, l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", \
-        ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:l", \
+        ["help", "verbose", "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('', '', '')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l = '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-n", "--namespace"):
-            if not verbose: verbose = False
-            ns = a          
+            ns = a
+        elif o in ("-l", "--logging"):
+            l = True                    
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time)      
 
 if __name__ == "__main__":

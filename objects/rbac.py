@@ -77,7 +77,7 @@ class ClusterRBAC:
         k8s.Output.csv_out(data, headers, 'rbac', 'cluster_role_binding', 'all')
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'cluster_role_binding', 'all')
-        _logger.info(json_data)          
+        if l: _logger.info(json_data)          
 
     def get_ns_role(v, l):    
         data = []
@@ -120,7 +120,7 @@ class ClusterRBAC:
         k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding', namespace)
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'ns_role_binding', namespace)
-        _logger.info(json_data)  
+        if l:  _logger.info(json_data)  
 
 def call_all(v, ns, l):
     ClusterRBAC(ns)
