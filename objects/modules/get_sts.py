@@ -1,7 +1,7 @@
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+from kubernetes import client
+from .load_kube_config import kubeConfig
 
-config.load_kube_config()
+kubeConfig.load_kube_config()
 apps = client.AppsV1Api()
 
 class K8sStatefulSet:

@@ -1,7 +1,8 @@
-from kubernetes import client, config
+from kubernetes import client
 from kubernetes.client.rest import ApiException
+from .load_kube_config import kubeConfig
 
-config.load_kube_config()
+kubeConfig.load_kube_config()
 rbac = client.RbacAuthorizationV1Api()
 
 class K8sClusterRole:

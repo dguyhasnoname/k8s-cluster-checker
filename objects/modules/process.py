@@ -390,6 +390,8 @@ class Check:
                 affinity = u'\u2717'
             data.append([item.metadata.namespace, k8s_object_name, \
             node_selector, toleration, affinity, priority_class_name])
+        if v or l: print ("\ntolerations_affinity_node_selector_priority check: {} {}"\
+        .format(len(k8s_object_list.items), k8s_object))            
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, \
         'tolerations_affinity_node_selector_priority', ns)
@@ -477,6 +479,8 @@ class Check:
         return json_data
 
 class IngCheck:
+    global _logger
+    _logger = logger.get_logger('Service')     
     # checking mapping of ingress
     def get_ing_rules(ingress_rule, v):
         data = ""
@@ -490,14 +494,22 @@ class IngCheck:
                     +  str(j.backend.service_port) + "]" + "\n"
         return data
 
-    def list_ingress(k8s_object_list, k8s_object, headers, v, ns):
-        data = []
+    def list_ingress(k8s_object_list, k8s_object, headers, v, ns , l):
+        data, total_rules_count = [], 0
         for i in k8s_object_list.items:
             data.append([i.metadata.namespace, i.metadata.name, \
             len(i.spec.rules), IngCheck.get_ing_rules(i.spec.rules,v)])
-        Output.print_table(data, headers, v)
+            total_rules_count += len(i.spec.rules)
+        Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, 'ingress', ns)
-        json_data = Output.json_out(data, headers, k8s_object, 'ingress', ns)    
+
+        # creating analysis data for logging
+        analysis = {"ingress_property": "ingress_rules",
+                    "total_ingress_count": len(data),
+                    "total_ingress_rules": total_rules_count,
+                    "ingress_data": data} 
+        json_data = Output.json_out(data, analysis, headers, k8s_object, 'ingress', ns)    
+        if l: _logger.info(json_data)
 
         return json_data
 
@@ -582,6 +594,8 @@ class CtrlProp:
                 "Disable profiling for reduced attack surface.\n")
 
 class Service:
+    global _logger
+    _logger = logger.get_logger('Service')    
     # checking type of services
     def check_service(k8s_object, k8s_object_list, l):
         cluster_ip_svc, lb_svc, others_svc = [], [], []
@@ -625,7 +639,7 @@ class Service:
                     "lb_type_count": analysis[1],
                     "others_type_count": analysis[2]}        
         json_data = Output.json_out(data, analysis, headers, k8s_object, 'service', ns)    
-
+        if l: _logger.info(json_data)
         return [json_data, data] 
 
 class Rbac:
@@ -673,7 +687,7 @@ class Rbac:
                     "api_specific_delete_perm_role": data_api_specific_delete_perm,
                     "rbac_role_data": data }        
         json_data = Output.json_out(data, analysis, headers, 'rbac', k8s_object, ns)
-        _logger.info(json_data)
+        if l: _logger.info(json_data)
         return json_data        
 
 class NameSpace:
@@ -844,5 +858,5 @@ class CRDs:
                     "other_scope_crd_count": data_cluster_scope,
                     "crd_data": data }         
         json_data = Output.json_out(data, analysis, headers, k8s_object, '', ns)
-        _logger.info(json_data)
+        if l: _logger.info(json_data)
         return json_data
