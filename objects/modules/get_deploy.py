@@ -17,4 +17,4 @@ class K8sDeploy:
                 deployments = apps.list_deployment_for_all_namespaces(timeout_seconds=10)
             return deployments
         except ApiException as e:
-            print("Exception when calling AppsV1Api->read_namespaced_deployment: %s\n" % e)
+            print("Exception when calling AppsV1Api->list_deployment_for_all_namespaces: %s\n" % e)

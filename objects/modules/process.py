@@ -576,7 +576,7 @@ class CtrlProp:
                 analysis = {"ctrl_plane_property": "admission_controllers_status",
                             "admission_plugins_enabled_count": len(admission_plugins_enabled),
                             "admission_plugins_enabled": admission_plugins_enabled,
-                            "admission_plugins__not_enabled_count": len(admission_plugins_not_enabled),
+                            "admission_plugins_not_enabled_count": len(admission_plugins_not_enabled),
                             "admission_plugins_not_enabled": admission_plugins_not_enabled,
                             "admission_plugins_available": admission_plugins_list} 
                
