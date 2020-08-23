@@ -1,5 +1,6 @@
-import sys, time, os, getopt
+import time, os
 start_time = time.time()
+from modules.main import GetOpts
 from modules import logging as logger
 from modules import process as k8s
 from modules.get_jobs import K8sJobs
@@ -64,31 +65,12 @@ def call_all(v, ns, l):
     Jobs.check_jobs_pod_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:l", ["help", "verbose", \
-        "namespace", "logging"])
-        if not opts:        
-            call_all('','','')
-            k8s.Output.time_taken(start_time)
-            sys.exit()
-            
-    except getopt.GetoptError as err:
-        print(err)
-        return
-    verbose, ns, l= '', '', ''
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            usage()
-        elif o in ("-v", "--verbose"):
-            verbose = True
-        elif o in ("-n", "--namespace"):
-            ns = a
-        elif o in ("-l", "--logging"):
-            l = True                  
-        else:
-            assert False, "unhandled option"
-    call_all(verbose, ns, l)
-    k8s.Output.time_taken(start_time)      
+    options = GetOpts.get_opts()
+    if options[0]:
+        usage()
+    if options:
+        call_all(options[1], options[2], options[3])
+        k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
     try:

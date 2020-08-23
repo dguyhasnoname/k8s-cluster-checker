@@ -1,5 +1,6 @@
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
+from modules.main import GetOpts
 from modules import logging as logger
 from modules import process as k8s
 from modules.get_nodes import K8sNodes
@@ -104,31 +105,12 @@ def call_all(v, l):
     _Nodes.get_nodes_details(v, l)
 
 def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], \
-        "hvl", ["help", "verbose", "logging"])
-        if not opts:        
-            call_all('','')
-            k8s.Output.time_taken(start_time)
-            sys.exit()            
-            
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err)
-        return
-
-    verbose, l = '', ''
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            usage()
-        elif o in ("-v", "--verbose"):
-            verbose = True
-        elif o in ("-l", "--logging"):
-            l = True            
-        else:
-            assert False, "unhandled option"
-    call_all(verbose, l)
-    k8s.Output.time_taken(start_time)
+    options = GetOpts.get_opts()
+    if options[0]:
+        usage()
+    if options:
+        call_all(options[1], options[3])
+        k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
     try:
