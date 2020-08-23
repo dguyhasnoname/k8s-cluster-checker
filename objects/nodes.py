@@ -109,6 +109,8 @@ def main():
         "hvl", ["help", "verbose", "logging"])
         if not opts:        
             call_all('','')
+            k8s.Output.time_taken(start_time)
+            sys.exit()            
             
     except getopt.GetoptError as err:
         # print help information and exit:
