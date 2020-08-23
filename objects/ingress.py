@@ -1,9 +1,9 @@
 import sys, time, os, getopt, argparse
+start_time = time.time()
 from modules import process as k8s
+from modules import logging as logger
 from modules.get_ingress import K8sIngress
 from modules.get_ns import K8sNameSpace
-
-start_time = time.time()
 
 class _Ingress:
     def __init__(self,ns):
@@ -21,7 +21,7 @@ class _Ingress:
     global k8s_object
     k8s_object = 'ingress'
 
-    def ingress_count():
+    def ingress_count(v, l):
         data, total_ing = [], 0
         ns_list = K8sNameSpace.get_ns()
         headers = ['NAMESPACE', 'INGRESS']
@@ -36,44 +36,45 @@ class _Ingress:
             total_ing = total_ing + i[1]
         data = k8s.Output.append_hyphen(data, '-------')
         data.append(["Total: " , total_ing])
-        k8s.Output.print_table(data,headers,True)
+        k8s.Output.print_table(data, headers, True, l)
 
-    def list_ingress(v):
+    def list_ingress(v, l):
         data = []
         headers = ['NAMESPACE', 'INGRESS', 'RULES', 'HOST [SERVICE:PORT]']
         k8s.IngCheck.list_ingress(k8s_object_list, k8s_object, \
-        headers, v, namespace)
+        headers, v, namespace, l)
 
-def call_all(v,ns):
+def call_all(v, ns, l):
     _Ingress(ns)
-    _Ingress.ingress_count()
-    _Ingress.list_ingress(v)
+    _Ingress.ingress_count(v, l)
+    _Ingress.list_ingress(v, l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], \
-        "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], "hvn:l", ["help", "verbose", \
+        "namespace", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('','','')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
         print(err)
         return
-    verbose, ns = '', ''
+    verbose, ns, l= '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-n", "--namespace"):
-            if not verbose: verbose = False
-            ns = a          
+            ns = a
+        elif o in ("-l", "--logging"):
+            l = True                  
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
-    k8s.Output.time_taken(start_time)     
+    call_all(verbose, ns, l)
+    k8s.Output.time_taken(start_time)      
 
 if __name__ == "__main__":
     try:
