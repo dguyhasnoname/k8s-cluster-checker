@@ -1,8 +1,8 @@
 import sys, time, os, getopt, argparse
+start_time = time.time()
+from modules import logging as logger
 from modules import process as k8s
 from modules.get_pods import K8sPods
-
-start_time = time.time()
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -30,10 +30,11 @@ class _Pods:
             ns = 'all'
         namespace = ns   
         k8s_object_list = K8sPods.get_pods(ns) 
-    global k8s_object
+    global k8s_object, _logger
+    _logger = logger.get_logger('_Pods')
     k8s_object = 'pods'
 
-    def get_namespaced_pod_list(v):
+    def get_namespaced_pod_list(v, l):
         data = []
         headers = ['NAMESPACE', 'POD']
         for item in k8s_object_list.items:
@@ -42,69 +43,78 @@ class _Pods:
         k8s.Output.print_table(data,headers,v)
         return json.dumps(data)
     
-    def check_pod_security(v):
+    def check_pod_security(v, l):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER']        
-        k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
-        v, namespace)
+        data = k8s.Check.security_context(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_pod_health_probes(v):
+    def check_pod_health_probes(v, l):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', \
         'LIVENESS_PROBE']
-        k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
-        v, namespace)
+        data = k8s.Check.health_probes(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_pod_resources(v):
+    def check_pod_resources(v, l):
         headers = ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS']
-        k8s.Check.resources(k8s_object, k8s_object_list, headers, v, namespace)
+        data = k8s.Check.resources(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_pod_qos(v):
+    def check_pod_qos(v, l):
         headers = ['NAMESPACE', 'POD', 'QoS']
-        k8s.Check.qos(k8s_object, k8s_object_list, headers, v, namespace)
+        data = k8s.Check.qos(k8s_object, k8s_object_list, headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_pod_tolerations_affinity_node_selector_priority(v):
+    def check_pod_tolerations_affinity_node_selector_priority(v, l):
         headers = ['NAMESPACE', 'POD', 'NODE_SELECTOR', 'TOLERATIONS', \
         'AFFINITY', 'PRIORITY_CLASS']
-        k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
-        k8s_object_list, headers, v, namespace)
+        data = k8s.Check.tolerations_affinity_node_selector_priority(k8s_object, \
+        k8s_object_list, headers, v, namespace, l)
+        if l: _logger.info(data)
 
-    def check_image_pull_policy(v):
+    def check_image_pull_policy(v, l):
         headers = ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY']
-        k8s.Check.image_pull_policy(k8s_object, k8s_object_list, headers, \
-        v, namespace)
+        data = k8s.Check.image_pull_policy(k8s_object, k8s_object_list, headers, \
+        v, namespace, l)
+        if l: _logger.info(data)
 
-def call_all(v,ns):
+def call_all(v, ns, l):
     _Pods(ns)
-    _Pods.check_pod_security(v)
-    _Pods.check_pod_health_probes(v)
-    _Pods.check_pod_resources(v)
-    _Pods.check_pod_qos(v)
-    _Pods.check_image_pull_policy(v)
-    _Pods.check_pod_tolerations_affinity_node_selector_priority(v)
+    _Pods.check_pod_security(v, l)
+    _Pods.check_pod_health_probes(v, l)
+    _Pods.check_pod_resources(v, l)
+    _Pods.check_pod_qos(v, l)
+    _Pods.check_image_pull_policy(v, l)
+    _Pods.check_pod_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvn:", ["help", "verbose", "namespace"])
+        opts, args = getopt.getopt(sys.argv[1:], \
+        "hvl", ["help", "verbose", "logging"])
         if not opts:        
-            call_all("","")
+            call_all('','','')
             k8s.Output.time_taken(start_time)
             sys.exit()
             
     except getopt.GetoptError as err:
+        # print help information and exit:
         print(err)
         return
-    verbose, ns = '', ''
+
+    verbose, ns, l = '', '', ''
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
-        elif o in ("-n", "--namespace"):
-            if not verbose: verbose = False
-            ns = a          
+        elif o in ("-l", "--logging"):
+            l = True            
         else:
             assert False, "unhandled option"
-    call_all(verbose,ns)
+    call_all(verbose, ns, l)
     k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
