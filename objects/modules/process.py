@@ -88,9 +88,14 @@ class Output:
         # writing out json data in file based on object type and config being checked
         filename = Output.filename(directory, ns, k8s_object, config, 'report.json')
         f = open(filename, 'w')
-        json_data = {"object": k8s_object,
-                     "analysis": analysis,
-                     "data": json_data}        
+        if analysis:
+            json_data = {"object": k8s_object,
+                        "analysis": analysis,
+                        "data": json_data}
+        else:
+            json_data = {"object": k8s_object,
+                        "data": json_data}
+
         f.write(json.dumps(json_data))
         f.close()
 
@@ -480,7 +485,7 @@ class Check:
 
 class IngCheck:
     global _logger
-    _logger = logger.get_logger('Service')     
+    _logger = logger.get_logger('IngCheck')
     # checking mapping of ingress
     def get_ing_rules(ingress_rule, v):
         data = ""
@@ -506,8 +511,8 @@ class IngCheck:
         # creating analysis data for logging
         analysis = {"ingress_property": "ingress_rules",
                     "total_ingress_count": len(data),
-                    "total_ingress_rules": total_rules_count,
-                    "ingress_data": data} 
+                    "total_ingress_rules": total_rules_count
+                    } 
         json_data = Output.json_out(data, analysis, headers, k8s_object, 'ingress', ns)    
         if l: _logger.info(json_data)
 
@@ -578,8 +583,8 @@ class CtrlProp:
                             "admission_plugins_enabled": admission_plugins_enabled,
                             "admission_plugins_not_enabled_count": len(admission_plugins_not_enabled),
                             "admission_plugins_not_enabled": admission_plugins_not_enabled,
-                            "admission_plugins_available": admission_plugins_list} 
-               
+                            "admission_plugins_available": admission_plugins_list
+                            }
                 json_data = Output.json_out(data, analysis, headers, 'admission_controllers', '', ns)
 
                 return json_data
@@ -637,7 +642,8 @@ class Service:
                     "total_service_count": len(data),
                     "cluster_ip_type_count": analysis[0],
                     "lb_type_count": analysis[1],
-                    "others_type_count": analysis[2]}        
+                    "others_type_count": analysis[2]
+                    }
         json_data = Output.json_out(data, analysis, headers, k8s_object, 'service', ns)    
         if l: _logger.info(json_data)
         return [json_data, data] 
@@ -661,31 +667,64 @@ class Rbac:
 
     # analysis RBAC for permissions
     def analyse_role(data, headers, k8s_object, ns, l):
-        full_perm, delete_perm, data_full_delete_perm, \
-        data_api_specific_delete_perm = [], [], '', ''
+        full_perm, full_perm_list, full_perm_list_json, delete_perm, \
+        impersonate_perm, exec_perm = [], [], [], [], [], []
+        data_api_specific_delete_perm, data_impersonate_perm, \
+        data_full_delete_perm, data_exec_perm = '', '', '', ''
         for i in data:
-            if '*' in i[4]: full_perm.append([i[0]])
-            if 'delete' in i[4]: delete_perm.append([i[0]])
+            if '*' in i[-1] and '*' in i[-2] and '*' in i[-3]:
+                full_perm.append([i[0]])
+                if  k8s_object == 'roles':
+                    # creating data for roles with full permissions on all resources and apigroups
+                    full_perm_list.append([i[0], i[1], i[2], i[3], i[4], i[5]])
+                    full_perm_list_json.append({"role_name": i[0],
+                                                "namespace": i[1],
+                                                "api_groups": i[3].strip('\n'),
+                                                "resources": i[4].strip('\n'),
+                                                "verbs": i[5].strip('\n')
+                                                })
+            if 'delete' in i[-1] and '*' in i[-2]: delete_perm.append([i[0]])
+            if 'impersonate' in i[4]: impersonate_perm.append([i[0]])
+            if 'exec' in i[-2]: exec_perm.append([i[0]])
+
         print ("\n{}: {}".format(k8s_object, len(data)))
         if len(full_perm):
-            data_full_delete_perm = Output.bar(full_perm, data, 'are having full permission on selected APIs', \
-            k8s_object, Output.RED, l)
+            if  k8s_object == 'roles':
+                data_full_delete_perm = Output.bar(full_perm, data, \
+                'full permission(on ALL RESOURCES and APIs) ' \
+                + Output.RED + u'\u2620' + u'\u2620' + u'\u2620' + Output.RESET, \
+                k8s_object, Output.RED, l)
+                Output.print_table(full_perm_list, headers, True, l)
+            else:
+                data_full_delete_perm = Output.bar(full_perm, data, \
+                'full permission(on all APIs and k8s resources)', \
+                k8s_object, Output.RED, l)
         else:
             print (Output.GREEN + "[OK] " + Output.RESET + \
-            "No {} are having full permission ".format(k8s_object))
+            "No {} full permission ".format(k8s_object))
         if len(delete_perm):
             data_api_specific_delete_perm = Output.bar(delete_perm, data, \
-            'are having delete permission on designated APIs', \
+            'delete permission(on ALL RESOURCES on specfic APIs)', \
+            k8s_object, Output.RED, l)
+        if len(impersonate_perm):
+            data_impersonate_perm = Output.bar(impersonate_perm, data, \
+            'impersonate permission(on specfic APIs)', \
+            k8s_object, Output.RED, l)
+        if len(exec_perm):
+            data_exec_perm = Output.bar(exec_perm, data, \
+            'exec permission(on pods)', \
             k8s_object, Output.RED, l)
         Output.csv_out(data, headers, 'rbac', k8s_object, ns)
 
-
         # creating analysis data for logging
-        analysis = {"rbac_role_property": "delete_permissions_role",
-                    "total_rbac_role_count": len(data),
+        analysis = {"rbac_type": k8s_object,
+                    "total_rbac_type_count": len(data),
                     "full_delete_perm_role": data_full_delete_perm,
+                    "full_permission_role_list": full_perm_list_json,
                     "api_specific_delete_perm_role": data_api_specific_delete_perm,
-                    "rbac_role_data": data }        
+                    "impersonate_perm_role": data_impersonate_perm,
+                    "exec_perm_role": data_exec_perm
+                    }
         json_data = Output.json_out(data, analysis, headers, 'rbac', k8s_object, ns)
         if l: _logger.info(json_data)
         return json_data        
@@ -749,7 +788,8 @@ class NameSpace:
         return data
 
 class Nodes:
-    global version_check
+    global version_check, _logger
+    _logger = logger.get_logger('Nodes')
     version_check = []
     # checking latest k8s version and comparing it with installed k8s version
     def get_latest_k8s_version(kubelet_version):
@@ -822,12 +862,15 @@ class Nodes:
         # creating analysis report
         analysis = {"node_property": "version",
                     "total_version_check": len(version_check),
-                    "outdated_version_components": data_outdated}     
+                    "outdated_version_components": data_outdated
+                    }
         json_data = Output.json_out(version_check, analysis, headers, 'node', 'version', '')
 
         return json_data
 
 class CRDs:
+    global _logger
+    _logger = logger.get_logger('CRDs')
     def check_ns_crd(k8s_object_list, k8s_object, data, headers, v, ns, l):
         ns_crds, cluster_crds, other_crds = [], [], []
         for item in k8s_object_list.items:
@@ -855,8 +898,8 @@ class CRDs:
                     "total_crd_count": len(data),
                     "namespace_scope_crd_count": data_ns_scope,
                     "cluster_scope_crd_count": data_cluster_scope,
-                    "other_scope_crd_count": data_cluster_scope,
-                    "crd_data": data }         
+                    "other_scope_crd_count": data_cluster_scope
+                    }
         json_data = Output.json_out(data, analysis, headers, k8s_object, '', ns)
         if l: _logger.info(json_data)
         return json_data
