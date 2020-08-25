@@ -42,7 +42,7 @@ class ClusterRBAC:
         len(ns_role_binding_list.items)]], headers, True, l) 
        
     def get_cluster_role(v, l):
-        k8s_object = "clusteroles"
+        k8s_object = "clusterroles"
         data = []
         headers = ['CLUSTER_ROLE', 'RULES', 'API_GROUPS', 'RESOURCES', 'VERBS']
         
