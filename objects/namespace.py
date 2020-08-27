@@ -1,4 +1,4 @@
-import sys, time, os, getopt, argparse
+import time, os, argparse, json
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 from modules.main import GetOpts
@@ -134,7 +134,7 @@ class Namespace:
                     "total_roles": total_roles,
                     "total_rolebindings": total_role_bindings}
 
-        json_data_all_ns_detail = k8s.Output.json_out(data, analysis, headers, 'namespace', 'namespace_details', '')  
+        json_data_all_ns_detail = k8s.Output.json_out(data[:-2], analysis, headers, 'namespace', 'namespace_details', '')  
         if l: _logger.info(json_data_all_ns_detail)      
 
         # get namespace wise object details. Will give output in verbose mode
@@ -169,13 +169,14 @@ class Namespace:
             "Below {} namespaces have no workloads running: "\
             .format(len(empty_ns)))
             k8s.Output.print_table(empty_ns, headers, True, l)
-
+            # creating single list of namespace  for  json parsing
+            empyt_ns_list = [item for sublist in empty_ns for item in sublist]
             analysis = {"namespace_property": "empty_namespace",
                         "empty_namespace_count": len(empty_ns),
-                        "empty_namespae_list": empty_ns
+                        "empty_namespace_list": empyt_ns_list
                         }
             
-            if l: _logger.info(analysis)
+            if l: _logger.info(json.dumps(analysis))
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
         
