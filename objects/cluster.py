@@ -60,7 +60,7 @@ class Cluster:
         # analysing limit/requests from resources function in modules/process.py
         data_resources = k8s.Check.resources('pods',cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, 'all', l)
-        if l: _logger.info(data_security_context)
+        if l: _logger.info(data_resources)
 
         # analysing qos context from qos function in modules/process.py
         data_qos = k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], \
