@@ -1,0 +1,61 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: k8s-cluster-checker
+  name: k8s-cluster-checker
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: k8s-cluster-checker
+        spec:
+          imagePullSecrets:
+            - name: quayauth           
+          containers:
+          - image: dguyhasnoname/k8s-cluster-checker:0.1.0
+            imagePullPolicy: Always
+            name: cluster-checker
+            ports:
+            - containerPort: 80    
+            resources:
+              limits:
+                cpu: 400m
+                memory: 500Mi
+              requests:
+                cpu: 200m
+                memory: 400Mi
+          restartPolicy: OnFailure
+  schedule: 0/15 * * * *
+  startingDeadlineSeconds: 43200
+  successfulJobsHistoryLimit: 3
+  suspend: false
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-checker
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-checker
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: cluster-checker
+  apiGroup: rbac.authorization.k8s.io
