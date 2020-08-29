@@ -25,8 +25,7 @@ k8s-cluster-checker is bundle of python scripts which can be used to analyse bel
 Once the tool is run, it generates output in 3 ways:
 1. stdout on the screen to visualise the analysis right away.
 2. report in `csv` files are generated for each analysis. A combined report is generated in excel file. You can use it for your own custom analysis.
-3. json output is generated for each analysis which can be consumed in down-stream scripts.
-4. json output can also be ingested in Splunkor any other log/data aggregation tool for dashboarding.  
+3. json output is generated for each analysis which can be consumed in down-stream scripts. JSON output can also be ingested in Splunk or any other log/data aggregation tool for dashboarding.  
 
 #### Compatible k8s versions: 1.14+  
 Running k8s-cluster-check on older k8s version 1.10.x to 1.13.x may result in missing results/exceptions. Tool do not support k8s version previous to 1.10.x.
