@@ -1,6 +1,6 @@
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
-import time, os, re
+import time, os, re, sys
 start_time = time.time()
 from modules.main import GetOpts
 from modules import logging as logger

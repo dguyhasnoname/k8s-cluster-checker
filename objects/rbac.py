@@ -1,4 +1,4 @@
-import time, os, argparse, re
+import time, os, argparse, re, sys
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 from modules.main import GetOpts
@@ -122,6 +122,23 @@ class ClusterRBAC:
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'ns_role_binding', namespace)
         if l:  _logger.info(json_data)  
+
+def usage():
+    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""This script can be used to fetch details about rbac \
+in k8s cluster.
+
+Before running script export KUBECONFIG file as env:
+
+    export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
+        epilog="""All's well that ends well.""")
+    
+    parser.add_argument('-v', '--verbose', action="store_true", \
+    help="verbose mode. Use this flag to get namespace rbac details.")
+    parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
+Use this flag to get namespaced rbac details. If this flag is not \
+used, all namespace details is returned.")    
+    args=parser.parse_args()
 
 def call_all(v, ns, l):
     ClusterRBAC(ns)

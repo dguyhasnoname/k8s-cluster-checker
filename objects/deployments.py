@@ -1,4 +1,4 @@
-import os, time, json, argparse
+import os, time, json, argparse, sys
 from time import sleep
 start_time = time.time()
 from modules.main import GetOpts
@@ -9,15 +9,18 @@ from modules.get_deploy import K8sDeploy
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This script can be used to fetch details about deployments \
-        in kube-system namespace in k8s cluster.
+in k8s cluster.
 
 Before running script export KUBECONFIG file as env:
 
     export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
         epilog="""All's well that ends well.""")
     
-    parser.add_argument('-v', '--verbose', type=str, \
-    help="verbose mode. Use this flag to get kube-system namespace deployment details.")
+    parser.add_argument('-v', '--verbose', action="store_true", \
+    help="verbose mode. Use this flag to get namespace deployment details.")
+    parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
+Use this flag to get namespaced deployments details. If this flag is not \
+used, all namespace details is returned")    
     args=parser.parse_args()
 
 class _Deployment:

@@ -1,4 +1,4 @@
-import time, os, argparse
+import time, os, argparse, sys
 start_time = time.time()
 from modules.main import GetOpts
 from modules import logging as logger

@@ -1,4 +1,4 @@
-import time, os, argparse, json
+import time, os, argparse, json, sys
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 from modules.main import GetOpts
@@ -185,8 +185,11 @@ def call_all(v, ns, l):
 
 def main():
     options = GetOpts.get_opts()
-    call_all(options[1], options[2], options[3])
-    k8s.Output.time_taken(start_time)  
+    if options[0]:
+        usage()
+    if options:
+        call_all(options[1], options[2], options[3])
+        k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
     try:

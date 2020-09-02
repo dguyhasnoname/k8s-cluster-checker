@@ -8,7 +8,7 @@ from modules import process as k8s
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This script can be used to fetch details about damemonsets \
-        in kube-system namespace in k8s cluster.
+in kube-system namespace in k8s cluster.
 
 Before running script export KUBECONFIG file as env:
 
