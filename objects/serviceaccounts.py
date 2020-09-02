@@ -1,4 +1,4 @@
-import time, os, json
+import time, os, json, sys
 start_time = time.time()
 from modules.main import GetOpts
 from modules import logging as logger

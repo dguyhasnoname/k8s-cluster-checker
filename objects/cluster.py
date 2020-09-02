@@ -1,6 +1,5 @@
-import modules.message
 import threading as threading
-import sys, time, os, getopt, argparse, re
+import sys, time, os, argparse, re
 import pandas as pd
 import xlsxwriter
 import glob
@@ -116,7 +115,23 @@ class Cluster:
         print ("[INFO] Combined cluster report file: {}"\
         .format(combined_report_file))             
 
-def call_all(v, l):  
+def usage():
+    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""This script can be used to fetch details about any k8s cluster.
+
+Before running script export KUBECONFIG file as env:
+    export KUBECONFIG=<kubeconfig file location>
+
+    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
+        epilog="""All's well that ends well.""")
+
+    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
+Use this flag to get namespaced pod level config details.")
+    parser.add_argument('-l', '--logging', action="store_true", help="Use this \
+flag to generate logs in json format")
+    args=parser.parse_args()
+
+def call_all(v, l):
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
     Cluster.get_node_data(v, l)
     k8s.Output.separator(k8s.Output.GREEN,u'\u2581', l)
