@@ -3,7 +3,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/dguyhasnoname/k8s-cluster-checker.svg)
 [![docker image version](https://images.microbadger.com/badges/version/dguyhasnoname/k8s-cluster-checker.svg)](https://microbadger.com/images/dguyhasnoname/k8s-cluster-checker)
 [![PyPI version](https://badge.fury.io/py/kubernetes.svg)](https://badge.fury.io/py/kubernetes)
-![downloads](https://img.shields.io/github/downloads/dguyhasnoname/k8s-cluster-checker/total)
+![license](https://img.shields.io/github/license/dguyhasnoname/k8s-cluster-checker)
 
 
 ![logo](/docs/imgs/logo.png)
