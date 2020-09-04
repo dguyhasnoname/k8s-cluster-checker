@@ -674,8 +674,8 @@ class Rbac:
         for i in data:
             if '*' in i[-1] and '*' in i[-2] and '*' in i[-3]:
                 full_perm.append([i[0]])
+                # creating data for roles with full permissions on all resources and apigroups
                 if  k8s_object == 'roles':
-                    # creating data for roles with full permissions on all resources and apigroups
                     full_perm_list.append([i[0], i[1], i[2], i[3], i[4], i[5]])
                     full_perm_list_json.append({"role_name": i[0],
                                                 "namespace": i[1],
@@ -683,22 +683,25 @@ class Rbac:
                                                 "resources": i[4].strip('\n'),
                                                 "verbs": i[5].strip('\n')
                                                 })
+                # creating separate data(due to difference in columns) for clusterroles with full permissions on all resources and apigroups
+                else:
+                    full_perm_list.append([i[0], i[1], i[2], i[3], i[4]])
+                    full_perm_list_json.append({"cluster_role_name": i[0],
+                                                "api_groups": i[2].strip('\n'),
+                                                "resources": i[3].strip('\n'),
+                                                "verbs": i[4].strip('\n')
+                                                })
             if 'delete' in i[-1] and '*' in i[-2]: delete_perm.append([i[0]])
             if 'impersonate' in i[4]: impersonate_perm.append([i[0]])
             if 'exec' in i[-2]: exec_perm.append([i[0]])
 
         print ("\n{}: {}".format(k8s_object, len(data)))
         if len(full_perm):
-            if  k8s_object == 'roles':
-                data_full_delete_perm = Output.bar(full_perm, data, \
-                'full permission(on ALL RESOURCES and APIs) ' \
-                + Output.RED + u'\u2620' + u'\u2620' + u'\u2620' + Output.RESET, \
-                k8s_object, Output.RED, l)
-                Output.print_table(full_perm_list, headers, True, l)
-            else:
-                data_full_delete_perm = Output.bar(full_perm, data, \
-                'full permission(on all APIs and k8s resources)', \
-                k8s_object, Output.RED, l)
+            data_full_delete_perm = Output.bar(full_perm, data, \
+            'full permission(on ALL RESOURCES and APIs) ' \
+            + Output.RED + u'\u2620' + u'\u2620' + u'\u2620' + Output.RESET, \
+            k8s_object, Output.RED, l)
+            Output.print_table(full_perm_list, headers, True, l)
         else:
             print (Output.GREEN + "[OK] " + Output.RESET + \
             "No {} full permission ".format(k8s_object))
