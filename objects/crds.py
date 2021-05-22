@@ -1,13 +1,11 @@
 import sys, time, os, getopt, argparse, re, itertools
 start_time = time.time()
 from modules.main import GetOpts
-from modules import logging as logger
 from modules import process as k8s
 from modules.get_crds import K8sCRDs
 
 class _CRDs:
-    global k8s_object_list, k8s_object, _logger
-    _logger = logger.get_logger('_CRDs')
+    global k8s_object_list, k8s_object
     k8s_object_list = K8sCRDs.get_crds()
     k8s_object = 'crds'
     #print (k8s_object_list)
