@@ -2,12 +2,13 @@ import time, os, argparse, re, sys
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 from modules.main import GetOpts
-from modules import logging as logger
+from modules.logging import Logger
 from modules import process as k8s
-from modules.get_rbac import K8sClusterRole, K8sClusterRoleBinding, \
-K8sNameSpaceRole, K8sNameSpaceRoleBinding
+from modules.get_rbac import K8sClusterRole, K8sClusterRoleBinding, K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class ClusterRBAC:
+    global logger
+    logger = Logger.get_logger('', '')
     def __init__(self,ns):
         global namespace
         self.ns = ns
@@ -17,8 +18,7 @@ class ClusterRBAC:
 
         # pulling rbac data in threads for fast execution
         global cluster_role_list, cluster_role_binding_list, ns_role_list, \
-        ns_role_binding_list, _logger
-        _logger = logger.get_logger('Namespace')
+        ns_role_binding_list
         with ThreadPoolExecutor(max_workers=5) as executor:      
             tmp_cluster_role_list = \
             executor.submit(K8sClusterRole.list_cluster_role)
@@ -78,7 +78,7 @@ class ClusterRBAC:
         k8s.Output.csv_out(data, headers, 'rbac', 'cluster_role_binding', 'all')
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'cluster_role_binding', 'all')
-        if l: _logger.info(json_data)          
+        if l: logger.info(json_data)          
 
     def get_ns_role(v, l):    
         data = []
@@ -121,7 +121,7 @@ class ClusterRBAC:
         k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding', namespace)
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'ns_role_binding', namespace)
-        if l:  _logger.info(json_data)  
+        if l:  logger.info(json_data)  
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
