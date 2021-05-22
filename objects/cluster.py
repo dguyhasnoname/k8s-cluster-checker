@@ -6,6 +6,7 @@ import glob
 start_time = time.time()
 from modules.main import GetOpts
 from modules.logging import Logger
+from modules.output import Output
 from modules import process as k8s
 
 class Cluster:

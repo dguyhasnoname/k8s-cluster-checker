@@ -16,7 +16,8 @@ from modules.get_svc import K8sService
 from modules.get_rbac import K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class Namespace:
-    global all_ns_list
+    global all_ns_list, logger
+    logger = Logger.get_logger('', '')
     all_ns_list = K8sNameSpace.get_ns()
 
     def get_object_data(fun, k8s_object, ns, v, l):
@@ -127,7 +128,7 @@ class Namespace:
                     "total_rolebindings": total_role_bindings}
 
         json_data_all_ns_detail = k8s.Output.json_out(data[:-2], analysis, headers, 'namespace', 'namespace_details', '')  
-        if l: _logger.info(json_data_all_ns_detail)      
+        if l: logger.info(json_data_all_ns_detail)      
 
         # get namespace wise object details. Will give output in verbose mode
         def get_all_object_data(ns, v, l):
@@ -168,7 +169,7 @@ class Namespace:
                         "empty_namespace_list": empyt_ns_list
                         }
             
-            if l: _logger.info(json.dumps(analysis))
+            if l: logger.info(json.dumps(analysis))
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
 
@@ -196,9 +197,7 @@ def call_all(v, ns, l):
     Namespace.get_ns_data(v, ns, l)
 
 def main():
-    global logger
     options = GetOpts.get_opts()
-    logger = Logger.get_logger('', '')  
     if options[0]:
         usage()
     if options:
