@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
 from modules.main import GetOpts
 from modules import process as k8s
-from modules import logging as logger
+from modules.logging import Logger
 from modules.get_pods import K8sPods
 from modules.get_svc import K8sService
 from modules.get_deploy import K8sDeploy
@@ -16,16 +16,8 @@ from modules.get_svc import K8sService
 from modules.get_rbac import K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class Namespace:
-    global all_ns_list, _logger
-    _logger = logger.get_logger('Namespace')
+    global all_ns_list
     all_ns_list = K8sNameSpace.get_ns()
-
-    # def workload_sharing_data(data):
-    #     data = sorted(data, key=lambda x: x[4])[::-1]
-    #     highest_pod_count = data[0][4]
-    #     print (highest_pod_count)
-    #     k8s.Output.bar(highest_pod_count, data[0][1], \
-    #     'is running highest workload share','cluster','pods')
 
     def get_object_data(fun, k8s_object, ns, v, l):
         k8s_object_list = fun
@@ -204,7 +196,9 @@ def call_all(v, ns, l):
     Namespace.get_ns_data(v, ns, l)
 
 def main():
+    global logger
     options = GetOpts.get_opts()
+    logger = Logger.get_logger('', '')  
     if options[0]:
         usage()
     if options:
