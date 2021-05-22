@@ -697,6 +697,18 @@ class Nodes:
             "PLEASE CONSIDER CHANGING THE DEPRECATED OS!")
             latest_os_version = 'EOL'
             status = 'EOL'
+        elif 'Ubuntu' in os:
+            current_os_version = re.sub('[^0-9.]','', os)
+            ver = requests.get("https://api.launchpad.net/devel/ubuntu/series")
+            for x in ver.json()['entries']:
+                if 'Current Stable Release' in x['status']:
+                    latest_os_version = x['version']
+                    if version.parse(str(current_os_version)) < version.parse(str(latest_os_version)):
+                        status = 'outdated'
+                    else:
+                        status = 'latest'
+        else:
+            latest_os_version, current_os_version, status = ['OS not supported'] * 3
 
         return version_check.append(['OS', latest_os_version, current_os_version, status])
 
