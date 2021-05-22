@@ -111,10 +111,8 @@ class Cluster:
                 df = pd.read_csv(f)
                 df.to_excel(writer, sheet_name=os.path.basename(f)[:31])
         writer.save()
-        logger.info ("{} reports generated for cluster {}"\
-        .format(len(csv_list), cluster_name))
-        logger.info ("Combined cluster report file: {}"\
-        .format(combined_report_file))             
+        print ("{} reports generated for cluster {}".format(len(csv_list), cluster_name))
+        print ("Combined cluster report file: {}".format(combined_report_file))             
 
 def usage():
     parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,

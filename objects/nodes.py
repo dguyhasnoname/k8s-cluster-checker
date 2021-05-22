@@ -95,7 +95,7 @@ class _Nodes:
             'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
             k8s.Output.print_table(short_data, headers, True, l)
 
-        logger.info ("Checking for latest and installed versions.")
+        print ("Checking for latest and installed versions.")
         data_version_check = k8s.Nodes.node_version_check(item.status.node_info.os_image, \
         docker_version, item.status.node_info.kubelet_version, l)
         
