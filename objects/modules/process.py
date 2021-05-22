@@ -810,7 +810,7 @@ class Nodes:
 
     # checking latest OS version and comparing it with installed OS version
     def get_latest_os_version(os):
-        latest_os_version, current_os_version = '', ''
+        latest_os_version, current_os_version, status = '', ''
         if 'Flatcar' in os:
             ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
             latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
