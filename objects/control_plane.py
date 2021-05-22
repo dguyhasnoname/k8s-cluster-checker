@@ -3,7 +3,7 @@ from kubernetes.client.rest import ApiException
 import time, os, re, sys
 start_time = time.time()
 from modules.main import GetOpts
-from modules import logging as logger
+from modules.logging import Logger
 from modules import process as k8s
 from modules.load_kube_config import kubeConfig
 
@@ -11,8 +11,7 @@ kubeConfig.load_kube_config()
 core = client.CoreV1Api()
 
 class CtrlPlane:  
-    global k8s_object, k8s_object_list, namespace, _logger
-    _logger = logger.get_logger('CtrlPlane')
+    global k8s_object, k8s_object_list, namespace
     namespace = 'kube-system'
     def check_ctrl_plane_pods():
         try:
@@ -84,7 +83,7 @@ class CtrlPlane:
                 json_data = k8s.CtrlProp.check_admission_controllers(\
                 item.spec.containers[0].command, v, namespace, l)
 
-                if l: _logger.info(json_data)
+                if l: logger.info(json_data)
 
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:
@@ -103,7 +102,9 @@ def call_all(v, ns, l):
     CtrlPlane.check_ctrl_plane_pods_properties(v, l)
 
 def main():
+    global logger
     options = GetOpts.get_opts()
+    logger = Logger.get_logger('', '')
     if options[0]:
         usage()
     if options:
