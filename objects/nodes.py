@@ -1,15 +1,15 @@
 import sys, time, os, getopt, argparse, re
 start_time = time.time()
 from modules.main import GetOpts
-from modules import logging as logger
+from modules.logging import Logger
 from modules import process as k8s
 from modules.get_nodes import K8sNodes
 
 class _Nodes:
-    global k8s_object, k8s_object_list, k8s_node, _logger
-    _logger = logger.get_logger('_Nodes')
+    global k8s_object, k8s_object_list, k8s_node, logger
     k8s_object_list = K8sNodes.get_nodes()
     k8s_object = 'nodes'
+    logger = Logger.get_logger('', '')
 
     def get_nodes_details(v, l):
         data, temp_bar = [], []
@@ -59,7 +59,7 @@ class _Nodes:
         k8s.Output.csv_out(data, headers, 'nodes', 'detail', '')
         json_out = k8s.Output.json_out(data, '', headers, 'nodes', 'detail', '')
 
-        if l: _logger.info(json_out)
+        if l: logger.info(json_out)
         
         total_cpu, total_mem, masters, nodes, etcd, others, \
         total_vol = 0, 0, 0, 0, 0, 0, 0
@@ -95,11 +95,11 @@ class _Nodes:
             'TOTAL_MEM_GB', 'OS_NAME', 'DOCKER_VERSION', 'VOLUMES_IN_USE']
             k8s.Output.print_table(short_data, headers, True, l)
 
-        print ("[INFO] Checking for latest and installed versions...")
+        logger.info ("Checking for latest and installed versions.")
         data_version_check = k8s.Nodes.node_version_check(item.status.node_info.os_image, \
         docker_version, item.status.node_info.kubelet_version, l)
         
-        if l: _logger.info(data_version_check)
+        if l: logger.info(data_version_check)
 
 def call_all(v, l):
     _Nodes.get_nodes_details(v, l)
