@@ -179,6 +179,26 @@ class Namespace:
             if l: _logger.info(json.dumps(analysis))
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
+
+def usage():
+    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""This script can be used to fetch details about namespaces in k8s cluster.
+
+Before running script export KUBECONFIG file as env:
+    export KUBECONFIG=<kubeconfig file location>
+    
+    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
+        epilog="""All's well that ends well.""")
+    
+    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
+Use this flag to get namespaced pod level config details.")
+    parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
+Use this flag to get namespaced details. If this flag is not \
+used, all namespace details is returned")
+    parser.add_argument('-l', '--logging', action="store_true", help="namespace selector. \
+Use this flag to get namespaced details in JSON format on stdout. If this flag is not \
+used, all namespace details is returned")
+    args=parser.parse_args()
         
 def call_all(v, ns, l):
     Namespace.get_ns_data(v, ns, l)
