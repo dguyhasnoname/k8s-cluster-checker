@@ -2,7 +2,10 @@ from columnar import columnar
 from click import style
 from packaging import version
 import os, re, time, requests, json, csv
-from . import logging as logger
+from .logging import Logger
+
+global logger
+logger = Logger.get_logger('', '')
 
 class Output:
     RED = '\033[31m'
@@ -14,8 +17,7 @@ class Output:
     # u'\u2717' means values is None or not defined
     # u'\u2714' means value is defined
 
-    global patterns, _logger
-    _logger = logger.get_logger('Output')
+    global patterns
     patterns = [(u'\u2714', lambda text: style(text, fg='green')), \
                 ('True', lambda text: style(text, fg='green')), \
                 ('False', lambda text: style(text, fg='yellow'))]
@@ -484,8 +486,6 @@ class Check:
         return json_data
 
 class IngCheck:
-    global _logger
-    _logger = logger.get_logger('IngCheck')
     # checking mapping of ingress
     def get_ing_rules(ingress_rule, v):
         data = ""
@@ -514,7 +514,7 @@ class IngCheck:
                     "total_ingress_rules": total_rules_count
                     } 
         json_data = Output.json_out(data, analysis, headers, k8s_object, 'ingress', ns)    
-        if l: _logger.info(json_data)
+        if l: logger.info(json_data)
 
         return json_data
 
@@ -598,9 +598,7 @@ class CtrlProp:
                 print (Output.RED + "[ALERT] " + Output.RESET + \
                 "Disable profiling for reduced attack surface.\n")
 
-class Service:
-    global _logger
-    _logger = logger.get_logger('Service')    
+class Service:   
     # checking type of services
     def check_service(k8s_object, k8s_object_list, l):
         cluster_ip_svc, lb_svc, others_svc = [], [], []
@@ -645,12 +643,10 @@ class Service:
                     "others_type_count": analysis[2]
                     }
         json_data = Output.json_out(data, analysis, headers, k8s_object, 'service', ns)    
-        if l: _logger.info(json_data)
+        if l: logger.info(json_data)
         return [json_data, data] 
 
 class Rbac:
-    global _logger
-    _logger = logger.get_logger('Rbac')
     def get_rules(rules):
         data, api_groups, resources, verbs, rules_count = [], "", "", "", 0
         for i in rules:
@@ -729,7 +725,7 @@ class Rbac:
                     "exec_perm_role": data_exec_perm
                     }
         json_data = Output.json_out(data, analysis, headers, 'rbac', k8s_object, ns)
-        if l: _logger.info(json_data)
+        if l: logger.info(json_data)
         return json_data        
 
 class NameSpace:
@@ -791,8 +787,7 @@ class NameSpace:
         return data
 
 class Nodes:
-    global version_check, _logger
-    _logger = logger.get_logger('Nodes')
+    global version_check
     version_check = []
     # checking latest k8s version and comparing it with installed k8s version
     def get_latest_k8s_version(kubelet_version):
@@ -810,7 +805,7 @@ class Nodes:
 
     # checking latest OS version and comparing it with installed OS version
     def get_latest_os_version(os):
-        latest_os_version, current_os_version, status = '', ''
+        latest_os_version, current_os_version, status = '', '', ''
         if 'Flatcar' in os:
             ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
             latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
@@ -872,8 +867,6 @@ class Nodes:
         return json_data
 
 class CRDs:
-    global _logger
-    _logger = logger.get_logger('CRDs')
     def check_ns_crd(k8s_object_list, k8s_object, data, headers, v, ns, l):
         ns_crds, cluster_crds, other_crds = [], [], []
         for item in k8s_object_list.items:
@@ -904,5 +897,5 @@ class CRDs:
                     "other_scope_crd_count": data_cluster_scope
                     }
         json_data = Output.json_out(data, analysis, headers, k8s_object, '', ns)
-        if l: _logger.info(json_data)
+        if l: logger.info(json_data)
         return json_data
