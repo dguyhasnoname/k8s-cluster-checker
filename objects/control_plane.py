@@ -11,8 +11,9 @@ kubeConfig.load_kube_config()
 core = client.CoreV1Api()
 
 class CtrlPlane:  
-    global k8s_object, k8s_object_list, namespace
+    global k8s_object, k8s_object_list, namespace, logger
     namespace = 'kube-system'
+    logger = Logger.get_logger('', '')
     def check_ctrl_plane_pods():
         try:
             print ("\n[INFO] Fetching control plane workload data...")
@@ -102,9 +103,7 @@ def call_all(v, ns, l):
     CtrlPlane.check_ctrl_plane_pods_properties(v, l)
 
 def main():
-    global logger
     options = GetOpts.get_opts()
-    logger = Logger.get_logger('', '')
     if options[0]:
         usage()
     if options:
