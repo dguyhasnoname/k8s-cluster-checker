@@ -5,14 +5,16 @@ import xlsxwriter
 import glob
 start_time = time.time()
 from modules.main import GetOpts
-from modules import logging as logger
+from modules.logging import Logger
 from modules import process as k8s
 
 class Cluster:
+    global cluster_name, k8s_object, logger
+    logger = Logger.get_logger('', '')
     # fetching cluster name from modules/get_cm.py
     def get_cluster_name():
         from modules.get_cm import K8sConfigMap
-        cm = K8sConfigMap.get_cm('kube-system')
+        cm = K8sConfigMap.get_cm('kube-system', logger)
         for item in cm.items:
             if 'kubeadm-config' in item.metadata.name:
                 if 'clusterName' in item.data['ClusterConfiguration']:
@@ -23,9 +25,7 @@ class Cluster:
                     return cluster_name
             else:
                 pass
-
-    global cluster_name, k8s_object, _logger
-    _logger = logger.get_logger('Cluster')     
+ 
     cluster_name = get_cluster_name()
 
     # fetching nodes data from nodes.py
@@ -48,35 +48,35 @@ class Cluster:
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
         'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', 'RUNA_AS_USER'], \
         v, 'all', l)
-        if l: _logger.info(data_security_context)
+        if l: logger.info(data_security_context)
 
         # analysing health checks from health_probes function in modules/process.py
         data_health_probes = k8s.Check.health_probes('pods', cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', 'LIVENESS_PROBE'], \
         v, 'all', l)
-        if l: _logger.info(data_health_probes)
+        if l: logger.info(data_health_probes)
 
         # analysing limit/requests from resources function in modules/process.py
         data_resources = k8s.Check.resources('pods',cluster_pods_list, \
         ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], v, 'all', l)
-        if l: _logger.info(data_resources)
+        if l: logger.info(data_resources)
 
         # analysing qos context from qos function in modules/process.py
         data_qos = k8s.Check.qos('pods', cluster_pods_list, ['NAMESPACE', 'POD', 'QoS'], \
         v, 'all', l)
-        if l: _logger.info(data_qos)
+        if l: logger.info(data_qos)
 
         # analysing image_pull_policy from image_pull_policy function in modules/process.py
         data_image_pull_policy = k8s.Check.image_pull_policy('pods', cluster_pods_list, \
         ['DEPLOYMENT', 'CONTAINER_NAME', 'IMAGE', 'IMAGE_PULL_POLICY'], \
         v, 'all', l)
-        if l: _logger.info(data_image_pull_policy)
+        if l: logger.info(data_image_pull_policy)
 
         # analysing services from get_service function in modules/process.py
         data_get_service = k8s.Service.get_service('services', cluster_svc_list, \
         ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'IP', 'SELECTOR'], \
         v, 'all', l)
-        if l: _logger.info(data_get_service[0])
+        if l: logger.info(data_get_service[0])
 
     # fetching control plane data from control_plane.py
     def get_ctrl_plane_data(v, l):
@@ -110,9 +110,9 @@ class Cluster:
                 df = pd.read_csv(f)
                 df.to_excel(writer, sheet_name=os.path.basename(f)[:31])
         writer.save()
-        print ("[INFO] {} reports generated for cluster {}"\
+        logger.info ("{} reports generated for cluster {}"\
         .format(len(csv_list), cluster_name))
-        print ("[INFO] Combined cluster report file: {}"\
+        logger.info ("Combined cluster report file: {}"\
         .format(combined_report_file))             
 
 def usage():
