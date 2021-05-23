@@ -18,7 +18,7 @@ from modules.get_rbac import K8sNameSpaceRole, K8sNameSpaceRoleBinding
 class Namespace:
     def __init__(self, logger):
         self.logger = logger
-        self.all_ns_list = K8sNameSpace.get_ns()
+        self.all_ns_list = K8sNameSpace.get_ns(self.logger)
 
     def get_object_data(self, fun, k8s_object, ns, v, l):
         k8s_object_list = fun
@@ -57,16 +57,16 @@ class Namespace:
 
         # getting objects list in threads
         with ThreadPoolExecutor(max_workers=10) as executor:
-            temp_deploy = executor.submit(K8sDeploy.get_deployments, ns)
-            temp_ds = executor.submit(K8sDaemonSet.get_damemonsets, ns)
-            temp_sts = executor.submit(K8sStatefulSet.get_sts, ns)
-            temp_pods = executor.submit(K8sPods.get_pods, ns)
-            temp_svc = executor.submit(K8sService.get_svc, ns)
-            temp_ingress = executor.submit(K8sIngress.get_ingress, ns)
-            temp_jobs = executor.submit(K8sJobs.get_jobs, ns)
-            temp_role = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns)
+            temp_deploy = executor.submit(K8sDeploy.get_deployments, ns, self.logger)
+            temp_ds = executor.submit(K8sDaemonSet.get_damemonsets, ns, self.logger)
+            temp_sts = executor.submit(K8sStatefulSet.get_sts, ns, self.logger)
+            temp_pods = executor.submit(K8sPods.get_pods, ns, self.logger)
+            temp_svc = executor.submit(K8sService.get_svc, ns, self.logger)
+            temp_ingress = executor.submit(K8sIngress.get_ingress, ns, self.logger)
+            temp_jobs = executor.submit(K8sJobs.get_jobs, ns, self.logger)
+            temp_role = executor.submit(K8sNameSpaceRole.list_namespaced_role, ns, self.logger)
             temp_role_binding = \
-            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns)
+            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, ns, self.logger)
 
         # stroing data from threads ran above
         deployments = temp_deploy.result()
@@ -134,15 +134,15 @@ class Namespace:
             print (k8s.Output.BOLD + "\nNamespace: " + \
             k8s.Output.RESET  + "{}".format(ns))
 
-            Namespace.get_object_data(self, K8sDeploy.get_deployments(ns), \
+            Namespace.get_object_data(self, K8sDeploy.get_deployments(ns, self.logger), \
             'deployments', ns, v, l)
-            Namespace.get_object_data(self, K8sDaemonSet.get_damemonsets(ns), \
+            Namespace.get_object_data(self, K8sDaemonSet.get_damemonsets(ns, self.logger), \
             'damemonsets', ns, v, l)
-            Namespace.get_object_data(self, K8sStatefulSet.get_sts(ns), \
+            Namespace.get_object_data(self, K8sStatefulSet.get_sts(ns, self.logger), \
             'statefulsets', ns, v, l)
-            Namespace.get_object_data(self, K8sJobs.get_jobs(ns), \
+            Namespace.get_object_data(self, K8sJobs.get_jobs(ns, self.logger), \
             'jobs', ns, v, l)
-            Namespace.get_object_data(self, K8sService.get_svc(ns), \
+            Namespace.get_object_data(self, K8sService.get_svc(ns, self.logger), \
             'services', ns, v, l)
 
         if v:
@@ -168,7 +168,7 @@ class Namespace:
                         "empty_namespace_list": empyt_ns_list
                         }
             
-            if l: logger.info(json.dumps(analysis))
+            if l: self.logger.info(json.dumps(analysis))
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
 
@@ -198,7 +198,7 @@ def call_all(v, ns, l, logger):
 
 def main():
     options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
+    logger = Logger.get_logger(options[4], options[5])
     if options[0]:
         usage()
     if options:

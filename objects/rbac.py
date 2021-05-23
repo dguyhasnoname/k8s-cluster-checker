@@ -15,13 +15,13 @@ class ClusterRBAC:
 
         with ThreadPoolExecutor(max_workers=5) as executor:      
             tmp_cluster_role_list = \
-            executor.submit(K8sClusterRole.list_cluster_role)
+            executor.submit(K8sClusterRole.list_cluster_role, self.logger)
             tmp_cluster_role_binding_list = \
-            executor.submit(K8sClusterRoleBinding.list_cluster_role_binding)
+            executor.submit(K8sClusterRoleBinding.list_cluster_role_binding, self.logger)
             tmp_ns_role_list = \
-            executor.submit(K8sNameSpaceRole.list_namespaced_role, self.namespace)
+            executor.submit(K8sNameSpaceRole.list_namespaced_role, self.namespace, self.logger)
             tmp_ns_role_binding_list = \
-            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, self.namespace)
+            executor.submit(K8sNameSpaceRoleBinding.list_namespaced_role_binding, self.namespace, self.logger)
 
         self.cluster_role_list = tmp_cluster_role_list.result()
         self.cluster_role_binding_list = tmp_cluster_role_binding_list.result()
