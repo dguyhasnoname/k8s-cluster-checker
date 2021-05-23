@@ -16,43 +16,42 @@ from modules.get_svc import K8sService
 from modules.get_rbac import K8sNameSpaceRole, K8sNameSpaceRoleBinding
 
 class Namespace:
-    global all_ns_list, logger
-    logger = Logger.get_logger('', '')
-    all_ns_list = K8sNameSpace.get_ns()
+    def __init__(self, logger):
+        self.logger = logger
+        self.all_ns_list = K8sNameSpace.get_ns()
 
-    def get_object_data(fun, k8s_object, ns, v, l):
+    def get_object_data(self, fun, k8s_object, ns, v, l):
         k8s_object_list = fun
         if len(k8s_object_list.items):
             if not 'services' in k8s_object:
                 k8s.Check.security_context(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
                 'PRIVILEGED', 'READ_ONLY_FS', 'RUN_AS_NON_ROOT', \
-                'RUNA_AS_USER'], v, ns, l)
+                'RUNA_AS_USER'], v, ns, l, self.logger)
 
                 k8s.Check.health_probes(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'READINESS_PROPBE', \
-                'LIVENESS_PROBE'], v, ns, l)
+                'LIVENESS_PROBE'], v, ns, l, self.logger)
 
                 k8s.Check.resources(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'POD', 'CONTAINER_NAME', 'LIMITS', 'REQUESTS'], \
-                v, ns, l)
+                v, ns, l, self.logger)
 
                 if k8s_object in ['deployments','statefulsets']: 
                     k8s.Check.replica(k8s_object +  'ns', k8s_object_list, \
-                    ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v, ns, l)
+                    ['NAMESPACE', 'DEPLOYMENT', 'REPLICA_COUNT'], v, ns, l, self.logger)
             else:
                 k8s.Service.get_service(k8s_object, k8s_object_list, \
                 ['NAMESPACE', 'SERVICE', 'SERVICE_TYPE', 'CLUSTER_IP', \
-                'SELECTOR'], v, ns, l)
+                'SELECTOR'], v, ns, l, self.logger)
         else:
-            print (k8s.Output.YELLOW  + "[WARNING] " + k8s.Output.RESET + \
-            "No {} found!".format(k8s_object))
+            self.logger.warning ("No {} found!".format(k8s_object))
 
-    def get_ns_data(v, ns, l):
+    def get_ns_data(self, v, ns, l):
         data, sum_list, empty_ns = [], [], []
         if not ns:
             ns = 'all'
-            ns_list = all_ns_list
+            ns_list = self.all_ns_list
         else:
             ns_list = ns
 
@@ -128,22 +127,22 @@ class Namespace:
                     "total_rolebindings": total_role_bindings}
 
         json_data_all_ns_detail = k8s.Output.json_out(data[:-2], analysis, headers, 'namespace', 'namespace_details', '')  
-        if l: logger.info(json_data_all_ns_detail)      
+        if l: self.logger.info(json_data_all_ns_detail)      
 
         # get namespace wise object details. Will give output in verbose mode
-        def get_all_object_data(ns, v, l):
+        def get_all_object_data(self, ns, v, l):
             print (k8s.Output.BOLD + "\nNamespace: " + \
             k8s.Output.RESET  + "{}".format(ns))
 
-            Namespace.get_object_data(K8sDeploy.get_deployments(ns), \
+            Namespace.get_object_data(self, K8sDeploy.get_deployments(ns), \
             'deployments', ns, v, l)
-            Namespace.get_object_data(K8sDaemonSet.get_damemonsets(ns), \
+            Namespace.get_object_data(self, K8sDaemonSet.get_damemonsets(ns), \
             'damemonsets', ns, v, l)
-            Namespace.get_object_data(K8sStatefulSet.get_sts(ns), \
+            Namespace.get_object_data(self, K8sStatefulSet.get_sts(ns), \
             'statefulsets', ns, v, l)
-            Namespace.get_object_data(K8sJobs.get_jobs(ns), \
+            Namespace.get_object_data(self, K8sJobs.get_jobs(ns), \
             'jobs', ns, v, l)
-            Namespace.get_object_data(K8sService.get_svc(ns), \
+            Namespace.get_object_data(self, K8sService.get_svc(ns), \
             'services', ns, v, l)
 
         if v:
@@ -151,9 +150,9 @@ class Namespace:
                 for item in ns_list.items:
                     ns = item.metadata.name
                     k8s.Output.separator(k8s.Output.GREEN, '-', l)
-                    get_all_object_data(ns, True, l)
+                    get_all_object_data(self, ns, True, l)
             else:
-                get_all_object_data(ns, v, l)
+                get_all_object_data(self, ns, v, l)
 
         # getting namespaces which are empty
         if len(empty_ns) > 0:
@@ -187,21 +186,23 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
 Use this flag to get namespaced details. If this flag is not \
-used, all namespace details is returned")
+used,    is returned")
     parser.add_argument('-l', '--logging', action="store_true", help="namespace selector. \
 Use this flag to get namespaced details in JSON format on stdout. If this flag is not \
 used, all namespace details is returned")
     args=parser.parse_args()
         
-def call_all(v, ns, l):
-    Namespace.get_ns_data(v, ns, l)
+def call_all(v, ns, l, logger):
+    call = Namespace(logger)
+    call.get_ns_data(v, ns, l)
 
 def main():
     options = GetOpts.get_opts()
+    logger = Logger.get_logger(options[4], '')
     if options[0]:
         usage()
     if options:
-        call_all(options[1], options[2], options[3])
+        call_all(options[1], options[2], options[3], logger)
         k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
