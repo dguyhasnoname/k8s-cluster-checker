@@ -145,7 +145,7 @@ def call_all(v, namespace, l, logger):
 
 def main():
     options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '') 
+    logger = Logger.get_logger(options[4], '')
     if options[0]:
         usage()
     if options:

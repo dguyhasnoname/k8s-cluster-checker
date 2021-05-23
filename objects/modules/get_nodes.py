@@ -1,6 +1,8 @@
 from kubernetes import client
 from kubernetes.client.rest import ApiException
+from .load_kube_config import kubeConfig
 
+kubeConfig.load_kube_config()
 core = client.CoreV1Api()
 
 class K8sNodes:

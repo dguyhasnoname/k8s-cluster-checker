@@ -9,10 +9,6 @@ class _Nodes:
     def __init__(self, logger):
         self.logger = logger
 
-    global k8s_object, k8s_object_list, k8s_node
-    # k8s_object = 'nodes'
-    # logger = Logger.get_logger('', '')
-
     def get_nodes_details(self, v, l):
         data = []
         logger = self.logger
@@ -22,7 +18,7 @@ class _Nodes:
         for item in k8s_object_list.items:
             node_memory_gb = round((int(re.sub('\D', '', item.status.capacity['memory'])) / 1000000), 1)
             docker_version = item.status.node_info.container_runtime_version.rsplit('//', 1)[1]
-            role_tag = ['kubernetes.io/role', 'node.kubernetes.io/role']          
+                  
             if 'kubernetes.io/role' in item.metadata.labels:
                 tag = item.metadata.labels['kubernetes.io/role']
             elif 'node.kubernetes.io/role' in item.metadata.labels:
@@ -105,15 +101,17 @@ class _Nodes:
         
         if l: logger.info(data_version_check)
 
-def call_all(v, l):
-    _Nodes.get_nodes_details(v, l)
+def call_all(v, l, logger):
+    call = _Nodes(logger)
+    call.get_nodes_details(v, l)
 
 def main():
     options = GetOpts.get_opts()
+    logger = Logger.get_logger(options[4], '')
     if options[0]:
         usage()
     if options:
-        call_all(options[1], options[3])
+        call_all(options[1], options[3], logger)
         k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
