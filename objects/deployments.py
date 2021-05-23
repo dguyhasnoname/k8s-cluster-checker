@@ -27,9 +27,9 @@ class _Deployment:
     def __init__(self, namespace, logger):
         self.namespace = namespace
         if not self.namespace: self.namespace = 'all'
-        self.k8s_object_list = K8sDeploy.get_deployments(self.namespace)
         self.k8s_object = 'deployments'
         self.logger = logger
+        self.k8s_object_list = K8sDeploy.get_deployments(self.namespace, self.logger)
 
     def check_deployment_security(self, v, l):
         headers = ['NAMESPACE', 'DEPLOYMENT', 'CONTAINER_NAME', 'PRIVILEGED_ESC', \
@@ -82,7 +82,7 @@ def call_all(v, ns, l, logger):
 
 def main():
     options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
+    logger = Logger.get_logger(options[4], options[5])
     if options[0]:
         usage()
     if options:

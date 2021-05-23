@@ -2,10 +2,10 @@ import getopt, sys
 
 class GetOpts:
     def get_opts():
-        u, verbose, ns, l, format = [''] * 5
+        u, verbose, ns, l, format, silent = [''] * 6
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hvn:lf:", ["help", "verbose", \
-            "namespace", "logging", 'format'])
+            opts, args = getopt.getopt(sys.argv[1:], "hvn:lf:s", ["help", "verbose", \
+            "namespace", "logging", 'format', 'silent'])
         except getopt.GetoptError as err:
             print("[ERROR] {}. ".format(err) + \
             "Please run script with -h flag to see valid options.")
@@ -21,9 +21,11 @@ class GetOpts:
             elif o in ("-l", "--logging"):
                 l = True
             elif o in ("-f", "--format"):
-                l = True                                   
+                format = a
+            elif o in ("-s", "--silent"):
+                silent = True                                                  
             else:
                 assert False, "unhandled option" 
 
-        options = [u, verbose, ns, l, format]
+        options = [u, verbose, ns, l, format, silent]
         return options 

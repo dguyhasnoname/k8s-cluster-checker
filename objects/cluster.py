@@ -115,6 +115,8 @@ class Cluster:
                 df = pd.read_csv(f)
                 df.to_excel(writer, sheet_name=os.path.basename(f)[:31])
         writer.save()
+        writer.handles = None
+
         print ("{} reports generated for cluster {}".format(len(csv_list), self.cluster_name))
         print ("Combined cluster report file: {}".format(combined_report_file))             
 
@@ -152,7 +154,7 @@ def call_all(v, l, logger):
 
 def main():
     options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
+    logger = Logger.get_logger(options[4], options[5])
     if options[0]:
         usage()
     if options:

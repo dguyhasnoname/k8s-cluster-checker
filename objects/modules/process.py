@@ -663,7 +663,9 @@ class Nodes:
     latest = Output.GREEN +  'latest' + Output.RESET    
     # checking latest k8s version and comparing it with installed k8s version
     def get_latest_k8s_version(kubelet_version, logger):
+        session = requests.Session()
         ver = requests.get("https://storage.googleapis.com/kubernetes-release/release/stable.txt")
+        session.close()
         latest_k8s_version = ver.text
         if version.parse(str(kubelet_version)) < version.parse(str(latest_k8s_version)):
             logger.warning("Cluster is not running with latest kubernetes version: {}"\
@@ -678,7 +680,9 @@ class Nodes:
     def get_latest_os_version(os, logger):
         latest_os_version, current_os_version, status = [''] * 3
         if 'Flatcar' in os:
-            ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
+            session = requests.Session()
+            ver = session.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
+            session.close()
             latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
             current_os_version = os.split()[5]
 
@@ -698,7 +702,9 @@ class Nodes:
             status = 'EOL'
         elif 'Ubuntu' in os:
             current_os_version = re.sub('[^0-9.]','', os)
+            session = requests.Session()
             ver = requests.get("https://api.launchpad.net/devel/ubuntu/series")
+            session.close()
             for x in ver.json()['entries']:
                 if 'Current Stable Release' in x['status']:
                     latest_os_version = x['version']

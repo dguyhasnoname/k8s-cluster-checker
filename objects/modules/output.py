@@ -28,7 +28,7 @@ class Output:
         columns, rows = os.get_terminal_size(0)
         for i in range(columns):
             print (color + char, end="" + Output.RESET)
-        print ("\n")
+        print ("\n")      
 
     # function to append hyphen to print total of any object
     def append_hyphen(data, hyphen):
@@ -66,6 +66,7 @@ class Output:
             for j in data:
                 x = Output.remove_unicode(j)
                 writer.writerow(x)
+            file.close()
 
     # generating json data
     def json_out(data, analysis, headers, k8s_object, config, ns):

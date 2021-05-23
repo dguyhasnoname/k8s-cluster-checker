@@ -9,7 +9,7 @@ class K8sConfigMap:
     def get_cm(ns, logger):
         try:
             if ns != 'all':
-                #print ("\n[INFO] Fetching {} namespace configMaps data...".format(ns))
+                logger.info ("Fetching {} namespace configMaps data...".format(ns))
                 namespace = ns
                 configmaps = core.list_namespaced_config_map(namespace, timeout_seconds=10)
             else:
@@ -17,4 +17,4 @@ class K8sConfigMap:
                 configmaps = core.list_config_map_for_all_namespaces(timeout_seconds=10)
             return configmaps
         except ApiException as e:
-            logger("Exception when calling CoreV1Api->list_namespaced_config_map: %s\n" % e)
+            logger.warning("Exception when calling CoreV1Api->list_namespaced_config_map: %s\n" % e)

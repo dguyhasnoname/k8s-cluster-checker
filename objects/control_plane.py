@@ -88,7 +88,7 @@ class CtrlPlane:
                 json_data = k8s.CtrlProp.check_admission_controllers(\
                 item.spec.containers[0].command, v, self.namespace, l)
 
-                if l: logger.info(json_data)
+                if l: self.logger.info(json_data)
 
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:

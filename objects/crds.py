@@ -9,7 +9,7 @@ class _CRDs:
     def __init__(self, logger):
         self.logger = logger
         self.k8s_object = 'crds'
-        self.k8s_object_list = K8sCRDs.get_crds()
+        self.k8s_object_list = K8sCRDs.get_crds(self.logger)
 
     def get_crds(self, v, ns, l):
         data, crd_group, count_crd_group_crds, headers = \
