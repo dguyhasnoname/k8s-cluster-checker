@@ -1,13 +1,11 @@
 from kubernetes import client
 from kubernetes.client.rest import ApiException
-from .load_kube_config import kubeConfig
 
-kubeConfig.load_kube_config()
 core = client.CoreV1Api()
 
 class K8sNodes:
-    def get_nodes():
-        print ("\n[INFO] Fetching nodes data...")
+    def get_nodes(logger):
+        logger.info ("Fetching nodes data...")
         try:
             node_list = core.list_node(timeout_seconds=10)
             return node_list
