@@ -1,15 +1,15 @@
 from packaging import version
 import os, re, time, requests, json, csv
-from .logging import Logger
+#from .logging import Logger
 from .output import Output
 
-global logger
-logger = Logger.get_logger('', '')
+# global logger
+# logger = Logger.get_logger('', '')
 
 
 class Check:  
     # check security context
-    def security_context(k8s_object, k8s_object_list, headers, v, ns, l):
+    def security_context(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, config_not_defined, privileged_containers, run_as_user, \
         allow_privilege_escalation, read_only_root_filesystem, \
         run_as_non_root = [], [], [], [], [], [], []
@@ -46,20 +46,20 @@ class Check:
         k8s_object))
         data_no_sec_context = Output.bar(config_not_defined, data, \
         "containers have no security_context defined in running", \
-        k8s_object, Output.RED, l)
+        k8s_object, Output.RED, l, logger)
         data_privileged = Output.bar(privileged_containers, data, \
-        'containers are in prvilleged mode in running', k8s_object, Output.RED, l)
+        'containers are in prvilleged mode in running', k8s_object, Output.RED, l, logger)
         data_allow_privilege_escalation = Output.bar(allow_privilege_escalation, data, \
         'containers found in allow_privilege_escalation mode in running', \
-        k8s_object, Output.RED, l)
+        k8s_object, Output.RED, l, logger)
         data_run_as_user = Output.bar(run_as_user, data, \
         "containers have some user defined in running", 
-        k8s_object, Output.GREEN, l)
+        k8s_object, Output.GREEN, l, logger)
         data_run_as_non_root = Output.bar(run_as_non_root, data, \
-        "containers are having non_root_user in running", k8s_object, Output.GREEN, l)
+        "containers are having non_root_user in running", k8s_object, Output.GREEN, l, logger)
         data_read_only_root_filesystem = Output.bar(read_only_root_filesystem, data, \
         "containers only have read-only root filesystem in all running", \
-        k8s_object, Output.GREEN, l)
+        k8s_object, Output.GREEN, l, logger)
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, 'security_context', ns)  
 
@@ -76,7 +76,7 @@ class Check:
         return json_data
 
     # check health probes defined
-    def health_probes(k8s_object, k8s_object_list, headers, v, ns, l):
+    def health_probes(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, config_not_defined, readiness_probe, liveness_probe, both = \
         [], [], [], [], []
         for item in k8s_object_list.items:
@@ -106,20 +106,20 @@ class Check:
                     container.name, u'\u2717', u'\u2717'])
                     config_not_defined.append(False)
 
-        print ("\nhealth_probes definition: {} {}"\
+        logger.info ("health_probes definition: {} {}"\
         .format(len(k8s_object_list.items), k8s_object))
         data_no_health_probes = Output.bar(config_not_defined,data, \
         "containers found with no health probes in running", \
-        k8s_object, Output.RED, l)
+        k8s_object, Output.RED, l, logger)
         data_livness_probe = Output.bar(liveness_probe, data, \
         "containers found with only liveness probe defined in running", \
-        k8s_object, Output.YELLOW, l)
+        k8s_object, Output.YELLOW, l, logger)
         data_readiness_probe = Output.bar(readiness_probe, data, \
         "containers found with only readiness probe defined in running", \
-        k8s_object, Output.YELLOW, l)
+        k8s_object, Output.YELLOW, l, logger)
         data_all_probe = Output.bar(both, data, \
         "containers found having both liveness and readiness probe defined in running", 
-        k8s_object, Output.GREEN, l)
+        k8s_object, Output.GREEN, l, logger)
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, 'health_probes', ns)
 
@@ -135,7 +135,7 @@ class Check:
         return json_data
 
     # check resource requests/limits
-    def resources(k8s_object, k8s_object_list, headers, v, ns, l):
+    def resources(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, config_not_defined, limits, requests, both = [], [], [], [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -163,20 +163,20 @@ class Check:
                     data.append([item.metadata.namespace, k8s_object_name, \
                     container.name, u'\u2717', u'\u2717'])
                     config_not_defined.append(False)
-        print ("\nresource definition: {} {}".format(len(k8s_object_list.items), \
+        logger.info ("resource definition: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
         data_no_resources = Output.bar(config_not_defined,data, \
         "containers found without resources defined in running", \
-        k8s_object, Output.RED, l)
+        k8s_object, Output.RED, l, logger)
         data_requests = Output.bar(requests,data, \
         "containers found with only requests defined in running", 
-        k8s_object, Output.YELLOW, l)
+        k8s_object, Output.YELLOW, l, logger)
         data_limits = Output.bar(limits,data, \
         "containers found with only limits defined in running", \
-        k8s_object, Output.YELLOW, l)
+        k8s_object, Output.YELLOW, l, logger)
         data_all = Output.bar(both,data, \
         "containers found with both limits and requests defined in running", \
-        k8s_object, Output.GREEN, l)
+        k8s_object, Output.GREEN, l, logger)
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, 'resource_definition', ns)
 
@@ -192,7 +192,7 @@ class Check:
         return json_data
 
     # check for rollout strategy
-    def strategy(k8s_object, k8s_object_list, headers, v, ns, l):
+    def strategy(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data = []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -204,7 +204,7 @@ class Check:
         return json_data
 
     # check for single replica
-    def replica(k8s_object, k8s_object_list, headers, v, ns, l):
+    def replica(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, single_replica_count, multi_replica_count = [], [], []
         for item in k8s_object_list.items:
             k8s_object_name = item.metadata.name
@@ -217,10 +217,10 @@ class Check:
                     multi_replica_count.append(True)
 
         if len(single_replica_count) > 0:
-            print ("\nsingle replica check: {} {}".format(len(k8s_object_list.items), \
+            logger.info ("single replica check: {} {}".format(len(k8s_object_list.items), \
             k8s_object))
             data_single_replica = Output.bar(single_replica_count, data, str(k8s_object) + \
-            ' are running with 1 replica in all', k8s_object, Output.RED, l)
+            ' are running with 1 replica in all', k8s_object, Output.RED, l, logger)
             Output.print_table(data, headers, v, l)
             Output.csv_out(data, headers, k8s_object, 'single_replica_deployment', ns)
 
@@ -233,7 +233,7 @@ class Check:
             return json_data
         return data
 
-    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v, ns, l):
+    def tolerations_affinity_node_selector_priority(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data = []
         affinity, node_selector, toleration = "", "", ""
         for item in k8s_object_list.items:
@@ -277,7 +277,7 @@ class Check:
 
         return json_data
 
-    def qos(k8s_object, k8s_object_list, headers, v, ns, l):
+    def qos(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, guaranteed, besteffort, burstable = [], [], [], []
         if not k8s_object_list: return
         for item in k8s_object_list.items:
@@ -290,14 +290,14 @@ class Check:
             else:
                 besteffort.append([item.metadata.namespace, item.metadata.name])
 
-        print ("\nQoS check: {} {}".format(len(k8s_object_list.items), \
+        logger.info ("QoS check: {} {}".format(len(k8s_object_list.items), \
         k8s_object))
         data_guaranteed = Output.bar(guaranteed, data, str(k8s_object) + \
-        ' are having Guaranteed QoS out of all', k8s_object, Output.GREEN, l)
+        ' are having Guaranteed QoS out of all', k8s_object, Output.GREEN, l, logger)
         data_burstable = Output.bar(burstable, data, str(k8s_object) + \
-        ' are having Burstable QoS out of all', k8s_object, Output.YELLOW, l)
+        ' are having Burstable QoS out of all', k8s_object, Output.YELLOW, l, logger)
         data_besteffort = Output.bar(besteffort, data, str(k8s_object) + \
-        ' are having BestEffort QoS out of all', k8s_object, Output.RED, l)
+        ' are having BestEffort QoS out of all', k8s_object, Output.RED, l, logger)
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, 'QoS', ns)
 
@@ -311,7 +311,7 @@ class Check:
 
         return json_data
 
-    def image_pull_policy(k8s_object, k8s_object_list, headers, v, ns, l):
+    def image_pull_policy(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data, if_not_present, always, never= [], [], [], []
         config = 'image pull-policy'
         for item in k8s_object_list.items:
@@ -335,13 +335,13 @@ class Check:
         k8s_object))        
         data_if_not_present = Output.bar(if_not_present, data, \
         'containers have "IfNotPresent" image pull-policy in all', \
-        k8s_object, Output.YELLOW, l)
+        k8s_object, Output.YELLOW, l, logger)
         data_always = Output.bar(always, data, \
         'containers have "Always" image pull-policy in all', \
-        k8s_object, Output.GREEN, l)
+        k8s_object, Output.GREEN, l, logger)
         data_never = Output.bar(never, data, \
         'containers have "Never" image pull-policy in all', \
-        k8s_object, Output.RED, l)
+        k8s_object, Output.RED, l, logger)
         Output.print_table(data, headers, v ,l)
         Output.csv_out(data, headers, k8s_object, 'image_pull_policy', ns)
 
@@ -470,7 +470,7 @@ class CtrlProp:
 
 class Service:   
     # checking type of services
-    def check_service(k8s_object, k8s_object_list, l):
+    def check_service(k8s_object, k8s_object_list, l, logger):
         cluster_ip_svc, lb_svc, others_svc = [], [], []
         for item in k8s_object_list.items:
             if 'ClusterIP' in item.spec.type:
@@ -482,15 +482,15 @@ class Service:
         print ("\n{}: {} {}".format('service type: ', \
         len(k8s_object_list.items), k8s_object))    
         data_cluster_ip = Output.bar(cluster_ip_svc, k8s_object_list.items, \
-        'ClusterIP type', k8s_object, Output.CYAN, l)
+        'ClusterIP type', k8s_object, Output.CYAN, l, logger)
         data_lb = Output.bar(lb_svc, k8s_object_list.items, \
-        'LoadBalancer type', k8s_object, Output.CYAN, l)
+        'LoadBalancer type', k8s_object, Output.CYAN, l, logger)
         data_others = Output.bar(others_svc, k8s_object_list.items, \
-        'others type', k8s_object, Output.RED, l)
+        'others type', k8s_object, Output.RED, l, logger)
 
         return [data_cluster_ip, data_lb, data_others]
 
-    def get_service(k8s_object, k8s_object_list, headers, v, ns, l):
+    def get_service(k8s_object, k8s_object_list, headers, v, ns, l, logger):
         data = []
         for item in k8s_object_list.items:
             if item.spec.selector:
@@ -502,7 +502,7 @@ class Service:
             else:
                 data.append([item.metadata.namespace, item.metadata.name, item.spec.type, \
                 item.spec.cluster_ip, "None"])
-        analysis = Service.check_service(k8s_object, k8s_object_list, l)
+        analysis = Service.check_service(k8s_object, k8s_object_list, l, logger)
         Output.csv_out(data, headers, k8s_object, 'service', ns)
         
         # creating analysis data for logging
@@ -532,7 +532,7 @@ class Rbac:
         return data
 
     # analysis RBAC for permissions
-    def analyse_role(data, headers, k8s_object, ns, l):
+    def analyse_role(data, headers, k8s_object, ns, l, logger):
         full_perm, full_perm_list, full_perm_list_json, delete_perm, \
         impersonate_perm, exec_perm = [], [], [], [], [], []
         data_api_specific_delete_perm, data_impersonate_perm, \
@@ -566,7 +566,7 @@ class Rbac:
             data_full_delete_perm = Output.bar(full_perm, data, \
             'full permission(on ALL RESOURCES and APIs) ' \
             + Output.RED + u'\u2620' + u'\u2620' + u'\u2620' + Output.RESET, \
-            k8s_object, Output.RED, l)
+            k8s_object, Output.RED, l, logger)
             Output.print_table(full_perm_list, headers, True, l)
         else:
             print (Output.GREEN + "[OK] " + Output.RESET + \
@@ -574,15 +574,15 @@ class Rbac:
         if len(delete_perm):
             data_api_specific_delete_perm = Output.bar(delete_perm, data, \
             'delete permission(on ALL RESOURCES on specfic APIs)', \
-            k8s_object, Output.RED, l)
+            k8s_object, Output.RED, l, logger)
         if len(impersonate_perm):
             data_impersonate_perm = Output.bar(impersonate_perm, data, \
             'impersonate permission(on specfic APIs)', \
-            k8s_object, Output.RED, l)
+            k8s_object, Output.RED, l, logger)
         if len(exec_perm):
             data_exec_perm = Output.bar(exec_perm, data, \
             'exec permission(on pods)', \
-            k8s_object, Output.RED, l)
+            k8s_object, Output.RED, l, logger)
         Output.csv_out(data, headers, 'rbac', k8s_object, ns)
 
         # creating analysis data for logging
@@ -659,41 +659,40 @@ class NameSpace:
 class Nodes:
     global version_check
     version_check = []
+    outdated = Output.RED +  'outdated' + Output.RESET
+    latest = Output.GREEN +  'latest' + Output.RESET    
     # checking latest k8s version and comparing it with installed k8s version
-    def get_latest_k8s_version(kubelet_version):
+    def get_latest_k8s_version(kubelet_version, logger):
         ver = requests.get("https://storage.googleapis.com/kubernetes-release/release/stable.txt")
         latest_k8s_version = ver.text
         if version.parse(str(kubelet_version)) < version.parse(str(latest_k8s_version)):
-            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-            "Cluster is not running with latest kubernetes version: {}"\
-            .format(latest_k8s_version))
-            status = 'outdated'
+            logger.warning("Cluster is not running with latest kubernetes version: {}"\
+                        .format(latest_k8s_version))
+            status = Nodes.outdated
         else:
-            status = 'latest'
+            status = Nodes.latest
 
         return version_check.append(['K8S', latest_k8s_version, kubelet_version, status])
 
     # checking latest OS version and comparing it with installed OS version
-    def get_latest_os_version(os):
-        latest_os_version, current_os_version, status = '', '', ''
+    def get_latest_os_version(os, logger):
+        latest_os_version, current_os_version, status = [''] * 3
         if 'Flatcar' in os:
             ver = requests.get("https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt")
             latest_os_version = re.findall('(FLATCAR_VERSION=)(.+)', ver.text)
             current_os_version = os.split()[5]
 
             if version.parse(str(current_os_version)) < version.parse(str(latest_os_version[0][1])):
-                print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-                "Cluster nodes are not running on latest {}{}"\
-                .format(latest_os_version[0][0], latest_os_version[0][1]))
-                status = 'outdated'
+                logger.warning("Cluster nodes are not running on latest {}{}"\
+                        .format(latest_os_version[0][0], latest_os_version[0][1]))
+                status = Nodes.outdated
                 latest_os_version = latest_os_version[0][1]
             else:
-                status = 'latest'
+                status = Nodes.latest
                 latest_os_version = latest_os_version[0][1]
 
         elif 'CoreOS' in os:
-            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-            "Cluster nodes are running on CoreOS which is DPERECATED: https://coreos.com/os/eol/. " + \
+            logger.warning("Cluster nodes are running on CoreOS which is DPERECATED: https://coreos.com/os/eol/. " + \
             "PLEASE CONSIDER CHANGING THE DEPRECATED OS!")
             latest_os_version = 'EOL'
             status = 'EOL'
@@ -704,38 +703,38 @@ class Nodes:
                 if 'Current Stable Release' in x['status']:
                     latest_os_version = x['version']
                     if version.parse(str(current_os_version)) < version.parse(str(latest_os_version)):
-                        status = 'outdated'
+                        logger.warning("Cluster nodes are not running on latest Ubuntu version.")
+                        status = Nodes.outdated
                     else:
-                        status = 'latest'
+                        status = Nodes.latest
         else:
             latest_os_version, current_os_version, status = ['OS not supported'] * 3
 
         return version_check.append(['OS', latest_os_version, current_os_version, status])
 
     # checking latest docker version and comparing it with installed docker version
-    def get_latest_docker_version(docker_version):
+    def get_latest_docker_version(docker_version, logger):
         ver = requests.get("https://api.github.com/repositories/7691631/releases/latest")
         latest_docker_version = ver.json()['tag_name']
         if version.parse(str(docker_version)) < version.parse(str(latest_docker_version)):
-            print(Output.YELLOW + "[WARNING] " + Output.RESET + \
-            "Cluster nodes are not running on latest docker version: {}"\
+            logger.warning("Cluster nodes are not running on latest docker version: {}"\
             .format(latest_docker_version))
-            status = 'outdated'
+            status =  Nodes.outdated
         else:
-            status = 'latest'
+            status = Nodes.latest
 
         return version_check.append(['DOCKER', latest_docker_version, docker_version, status])
 
-    def node_version_check(current_os_version, docker_version, kubelet_version, l):
-        headers, outdated = ['COMPONENT', 'LATEST_VERSION', 'INSTALLED_VERSION', 'STATUS'], []
-        Nodes.get_latest_os_version(current_os_version)
-        Nodes.get_latest_docker_version(docker_version)
-        Nodes.get_latest_k8s_version(kubelet_version)
+    def node_version_check(current_os_version, docker_version, kubelet_version, l, logger):
+        headers, outdated_nodes = ['COMPONENT', 'LATEST_VERSION', 'INSTALLED_VERSION', 'STATUS'], []
+        Nodes.get_latest_os_version(current_os_version, logger)
+        Nodes.get_latest_docker_version(docker_version, logger)
+        Nodes.get_latest_k8s_version(kubelet_version, logger)
         for i in version_check:
             if i[3] in ['outdated', 'EOL']:
-                outdated.append(True)
-        data_outdated = Output.bar(outdated, version_check, \
-        'version checks reported as', 'outdated', Output.RED, l)
+                outdated_nodes.append(True)
+        data_outdated = Output.bar(outdated_nodes, version_check, \
+        'version checks reported as', 'outdated', Output.RED, l, logger)
         Output.print_table(version_check, headers, True, l)
         Output.csv_out(version_check, headers, 'node', 'version', '')
 
@@ -749,7 +748,7 @@ class Nodes:
         return json_data
 
 class CRDs:
-    def check_ns_crd(k8s_object_list, k8s_object, data, headers, v, ns, l):
+    def check_ns_crd(k8s_object_list, k8s_object, data, headers, v, ns, l, logger):
         ns_crds, cluster_crds, other_crds = [], [], []
         for item in k8s_object_list.items:
             if 'Namespaced' in item.spec.scope:
@@ -762,11 +761,11 @@ class CRDs:
                 other_crds.append([item.spec.group, item.metadata.name, \
                 item.spec.scope])
         data_ns_scope = Output.bar(ns_crds, k8s_object_list.items, \
-        'Namespaced scope', k8s_object, Output.CYAN, l)
+        'Namespaced scope', k8s_object, Output.CYAN, l, logger)
         data_cluster_scope = Output.bar(cluster_crds, k8s_object_list.items, \
-        'Cluster scope', k8s_object, Output.CYAN, l)
+        'Cluster scope', k8s_object, Output.CYAN, l, logger)
         data_cluster_scope = Output.bar(other_crds, k8s_object_list.items, \
-        'Other scope', k8s_object, Output.CYAN, l)   
+        'Other scope', k8s_object, Output.CYAN, l, logger)   
 
         Output.print_table(data, headers, v, l)
         Output.csv_out(data, headers, k8s_object, '', ns)

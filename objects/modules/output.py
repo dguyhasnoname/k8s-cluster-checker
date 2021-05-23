@@ -2,10 +2,6 @@ from columnar import columnar
 from click import style
 from packaging import version
 import os, re, time, requests, json, csv
-from .logging import Logger
-
-global logger
-logger = Logger.get_logger('', '')
 
 class Output:
     RED = '\033[31m'
@@ -113,7 +109,7 @@ class Output:
             return
 
     # prints analysis in bar format with %age, count and message
-    def bar(not_defined, data, message, k8s_object, color, l):
+    def bar(not_defined, data, message, k8s_object, color, l, logger):
         show_bar = []
         if len(not_defined) == 0:
             return
