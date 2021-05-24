@@ -134,6 +134,10 @@ Before running script export KUBECONFIG file as env:
 Use this flag to get namespaced pod level config details.")
     parser.add_argument('-l', '--logging', action="store_true", help="Use this \
 flag to generate logs in json format")
+    parser.add_argument('-o', '--output', action="store_true", help="Use this \
+flag to generate output in given format. csv|json. Default is table format.")
+    parser.add_argument('-s', '--silent', action="store_true", help="Use this \
+flag to silence the logging. Get only proccessed output.")
     args=parser.parse_args()
 
 def call_all(v, l, logger):
