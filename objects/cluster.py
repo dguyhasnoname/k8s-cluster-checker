@@ -1,9 +1,9 @@
 import threading as threading
-import sys, time, os, argparse, re
+import sys, time, os, re
 import pandas as pd
 import xlsxwriter, glob
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules.output import Output
 from modules import process as k8s
@@ -120,26 +120,6 @@ class Cluster:
         print ("{} reports generated for cluster {}".format(len(csv_list), self.cluster_name))
         print ("Combined cluster report file: {}".format(combined_report_file))             
 
-def usage():
-    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This script can be used to fetch details about any k8s cluster.
-
-Before running script export KUBECONFIG file as env:
-    export KUBECONFIG=<kubeconfig file location>
-
-    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
-        epilog="""All's well that ends well.""")
-
-    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
-Use this flag to get namespaced pod level config details.")
-    parser.add_argument('-l', '--logging', action="store_true", help="Use this \
-flag to generate logs in json format")
-    parser.add_argument('-f', '--format', action="store_true", help="Use this \
-flag to generate output in given format. csv|json. Default is table format.")
-    parser.add_argument('-s', '--silent', action="store_true", help="Use this \
-flag to silence the logging. Get only proccessed output.")
-    args=parser.parse_args()
-
 def call_all(v, l, logger):
     call = Cluster('', logger)
     call.get_cluster_name()
@@ -157,12 +137,11 @@ def call_all(v, l, logger):
     call.merge_reports()
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[3], logger)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.logging, logger)
         k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
