@@ -1,7 +1,7 @@
 import time, os, argparse, json, sys
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules import process as k8s
 from modules.logging import Logger
 from modules.get_pods import K8sPods
@@ -171,39 +171,18 @@ class Namespace:
             if l: self.logger.info(json.dumps(analysis))
 
         return [ data , pods, svc, deployments, ds, jobs, ingress ]
-
-def usage():
-    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This script can be used to fetch details about namespaces in k8s cluster.
-
-Before running script export KUBECONFIG file as env:
-    export KUBECONFIG=<kubeconfig file location>
-    
-    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
-        epilog="""All's well that ends well.""")
-    
-    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
-Use this flag to get namespaced pod level config details.")
-    parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
-Use this flag to get namespaced details. If this flag is not \
-used,    is returned")
-    parser.add_argument('-l', '--logging', action="store_true", help="namespace selector. \
-Use this flag to get namespaced details in JSON format on stdout. If this flag is not \
-used, all namespace details is returned")
-    args=parser.parse_args()
         
 def call_all(v, ns, l, logger):
     call = Namespace(logger)
     call.get_ns_data(v, ns, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
-        k8s.Output.time_taken(start_time)       
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
+        k8s.Output.time_taken(start_time)      
 
 if __name__ == "__main__":
     try:
