@@ -1,33 +1,17 @@
 import time, os, argparse, sys
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules import process as k8s
 from modules.get_pods import K8sPods
 
-def usage():
-    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This script can be used to fetch details about pods deployed \
-in namespaces in k8s cluster.
-
-Before running script export KUBECONFIG file as env:
-    export KUBECONFIG=<kubeconfig file location>
-    
-    e.g. export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
-        epilog="""All's well that ends well.""")
-    
-    parser.add_argument('-v', '--verbose', action="store_true", help="verbose mode. \
-Use this flag to get namespaced pod level config details.")
-    parser.add_argument('-n', '--namespace', help="namespace selector. \
-Use this flag to get namespaced pod details. If this flag is not \
-used, all namespace details is returned")
-    args=parser.parse_args()
-
 class _Pods:
     def __init__(self, namespace, logger):
-        self.namespace = namespace
         self.logger = logger
-        if not namespace: namespace = 'all'  
+        if not namespace:
+            self.namespace = 'all'  
+        else:
+            self.namespace = namespace
         self.k8s_object_list = K8sPods.get_pods(self.namespace, self.logger) 
         self.k8s_object = 'pods'
 
@@ -89,12 +73,11 @@ def call_all(v, ns, l, logger):
     call.check_pod_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
         k8s.Output.time_taken(start_time)    
 
 if __name__ == "__main__":
