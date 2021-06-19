@@ -1,6 +1,6 @@
 import sys, time, os, getopt
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules import process as k8s
 from modules.get_sts import K8sStatefulSet
@@ -50,12 +50,11 @@ def call_all(v, ns, l, logger):
     call.check_sts_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
         k8s.Output.time_taken(start_time)    
 
 if __name__ == "__main__":
