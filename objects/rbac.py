@@ -1,7 +1,7 @@
 import time, os, argparse, re, sys
 from concurrent.futures import ThreadPoolExecutor
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules import process as k8s
 from modules.get_rbac import K8sClusterRole, K8sClusterRoleBinding, K8sNameSpaceRole, K8sNameSpaceRoleBinding
@@ -115,24 +115,7 @@ class ClusterRBAC:
         k8s.Output.csv_out(data, headers, 'rbac', 'ns_role_binding', self.namespace)
         json_data = k8s.Output.json_out(data[:-2], '', headers, 'rbac', \
         'ns_role_binding', self.namespace)
-        if l:  self.logger.info(json_data)  
-
-def usage():
-    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This script can be used to fetch details about rbac \
-in k8s cluster.
-
-Before running script export KUBECONFIG file as env:
-
-    export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
-        epilog="""All's well that ends well.""")
-    
-    parser.add_argument('-v', '--verbose', action="store_true", \
-    help="verbose mode. Use this flag to get namespace rbac details.")
-    parser.add_argument('-n', '--namespace', action="store_true", help="namespace selector. \
-Use this flag to get namespaced rbac details. If this flag is not \
-used, all namespace details is returned.")    
-    args=parser.parse_args()
+        if l:  self.logger.info(json_data)
 
 def call_all(v, namespace, l, logger):
     call = ClusterRBAC(namespace, logger)
@@ -144,12 +127,11 @@ def call_all(v, namespace, l, logger):
     call.get_ns_role_binding(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
         k8s.Output.time_taken(start_time)     
 
 if __name__ == "__main__":
