@@ -1,6 +1,6 @@
 import sys, time, os, getopt, argparse, re, itertools
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules import process as k8s
 from modules.logging import Logger
 from modules.get_crds import K8sCRDs
@@ -46,13 +46,12 @@ def call_all(v, ns, l, logger):
     call.get_crds(v, ns, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
-        k8s.Output.time_taken(start_time)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
+        k8s.Output.time_taken(start_time)         
 
 if __name__ == "__main__":
     try:

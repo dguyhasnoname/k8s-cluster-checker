@@ -2,7 +2,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import time, os, re, sys
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules import process as k8s
 from modules.load_kube_config import kubeConfig
@@ -75,25 +75,26 @@ class CtrlPlane:
         if not self.k8s_object_list: return
         container_name_check = ""
         headers = ['CTRL_PLANE_COMPONENT/ARGS', '']
+        k8scc_dir = os.path.dirname(__file__)
         for item in self.k8s_object_list.items:
             if item.spec.containers[0].name in "kube-controller-manager" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-controller-manager', headers, v, l)
+                os.path.join(k8scc_dir, 'conf/kube-controller-manager'), headers, v, l)
 
             elif item.spec.containers[0].name in "kube-apiserver" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-apiserver', headers, v, l)                
+                os.path.join(k8scc_dir, 'conf/kube-apiserver'), headers, v, l)                
                 json_data = k8s.CtrlProp.check_admission_controllers(\
-                item.spec.containers[0].command, v, self.namespace, l)
+                item.spec.containers[0].command, v, self.namespace, l, k8scc_dir)
 
                 if l: self.logger.info(json_data)
 
             elif item.spec.containers[0].name in "kube-scheduler" \
             and item.spec.containers[0].name not in container_name_check:
                 CtrlPlane.check_ctrl_plane_pods_properties_operation(item,\
-                './conf/kube-scheduler', headers, v, l)  
+                os.path.join(k8scc_dir, 'conf/kube-scheduler'), headers, v, l)  
                 k8s.CtrlProp.secure_scheduler_check(\
                 item.spec.containers[0].command)
             container_name_check = item.spec.containers[0].name
@@ -108,13 +109,12 @@ def call_all(v, ns, l, logger):
     call.check_ctrl_plane_pods_properties(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], '')
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
-        k8s.Output.time_taken(start_time)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
+        k8s.Output.time_taken(start_time)         
 
 if __name__ == "__main__":
     try:

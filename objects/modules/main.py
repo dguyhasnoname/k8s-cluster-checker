@@ -46,7 +46,7 @@ class ArgParse:
                             ', workload running with single replica'
                             ', rbac analysis'
                             ', stale namespaces with no workloads')
-        p.add_argument('-v', '--verbose', help='verbose mode. Use this flag to get namespaced pod level config details.')
+        p.add_argument('-v', '--verbose', action='store_true', help='verbose mode. Use this flag to get namespaced pod level config details.')
         p.add_argument('-n', '--namespace', help='pass kubeconfig of the cluster. If not passed, picks KUBECONFIG from env')
         p.add_argument('-l', '--logging', help='Use this flag to generate logs in json format')
         p.add_argument('-f', '--format', help='Use this flag to generate output in given format. csv|json. Default is table format.')

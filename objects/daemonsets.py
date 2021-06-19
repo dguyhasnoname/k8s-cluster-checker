@@ -1,23 +1,9 @@
 import sys, time, os, getopt
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules.logging import Logger
 from modules.get_ds import K8sDaemonSet
 from modules import process as k8s
-
-def usage():
-    parser=argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This script can be used to fetch details about damemonsets \
-in kube-system namespace in k8s cluster.
-
-Before running script export KUBECONFIG file as env:
-
-    export KUBECONFIG=/Users/dguyhasnoname/kubeconfig\n""",
-        epilog="""All's well that ends well.""")
-    
-    parser.add_argument('-v', '--verbose', type=str, \
-    help="verbose mode. Use this flag to get kube-system namespace damemonset details.")
-    args=parser.parse_args()
 
 class _Daemonset:
     def __init__(self, namespace, logger):
@@ -64,13 +50,12 @@ def call_all(v, namespace, l, logger):
     call.check_damemonset_tolerations_affinity_node_selector_priority(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
-        k8s.Output.time_taken(start_time)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
+        k8s.Output.time_taken(start_time)          
 
 if __name__ == "__main__":
     try:
