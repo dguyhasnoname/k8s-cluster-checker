@@ -369,7 +369,7 @@ class IngCheck:
                     +  str(j.backend.service_port) + "]" + "\n"
         return data
 
-    def list_ingress(k8s_object_list, k8s_object, headers, v, ns , l):
+    def list_ingress(k8s_object_list, k8s_object, headers, v, ns , l, logger):
         data, total_rules_count = [], 0
         for i in k8s_object_list.items:
             data.append([i.metadata.namespace, i.metadata.name, \
@@ -389,9 +389,9 @@ class IngCheck:
         return json_data
 
 class CtrlProp:
-    def read_admission_controllers():
+    def read_admission_controllers(k8scc_dir):
         admission_controllers_list = []
-        with open('./conf/admission-controllers', "r") as file:
+        with open(os.path.join(k8scc_dir, 'conf/admission-controllers'), "r") as file:
             admission_controllers_list = file.read()
         return admission_controllers_list
 
@@ -418,7 +418,7 @@ class CtrlProp:
             data.append([i, u'\u2717'])
         return data
 
-    def check_admission_controllers(commands, v, ns, l):
+    def check_admission_controllers(commands, v, ns, l, k8scc_dir):
         data, admission_plugins_enabled, admission_plugins_not_enabled, \
         headers = [], [], [], ['ADMISSION_PLUGINS', 'ENABLED']
         important_admission_plugins = ['AlwaysPullImages', \
@@ -431,7 +431,7 @@ class CtrlProp:
                 admission_plugins_enabled = (c.rsplit("=")[1]).split(",")
                 for i in admission_plugins_enabled:
                     data.append([i, u'\u2714'])
-                admission_plugins_list = CtrlProp.read_admission_controllers()
+                admission_plugins_list = CtrlProp.read_admission_controllers(k8scc_dir)
 
                 # checking difference in addmission controllers
                 admission_plugins_not_enabled = list(set(important_admission_plugins) - \

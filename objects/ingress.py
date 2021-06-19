@@ -1,6 +1,6 @@
 import sys, time, os, getopt, argparse
 start_time = time.time()
-from modules.main import GetOpts
+from modules.main import ArgParse
 from modules import process as k8s
 from modules.logging import Logger
 from modules.get_ingress import K8sIngress
@@ -13,9 +13,8 @@ class _Ingress:
         if not self.namespace:
             self.namespace = 'all'
         self.k8s_object_list = K8sIngress.get_ingress(self.namespace, self.logger) 
-        try:
-            len(self.k8s_object_list)
-        except:
+
+        if not len(self.k8s_object_list.items):
             logger.warning("No ingress found!")
             sys.exit()
         self.k8s_object = 'ingress'
@@ -48,12 +47,11 @@ def call_all(v, namespace, l, logger):
     call.list_ingress(v, l)
 
 def main():
-    options = GetOpts.get_opts()
-    logger = Logger.get_logger(options[4], options[5])
-    if options[0]:
-        usage()
-    if options:
-        call_all(options[1], options[2], options[3], logger)
+    args = ArgParse.arg_parse()
+    # args is [u, verbose, ns, l, format, silent]
+    logger = Logger.get_logger(args.format, args.silent)
+    if args:
+        call_all(args.verbose, args.namespace, args.logging, logger)
         k8s.Output.time_taken(start_time)       
 
 if __name__ == "__main__":
